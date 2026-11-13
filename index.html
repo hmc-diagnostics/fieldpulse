@@ -212,9 +212,14 @@ details.more{background:var(--bg);border-style:solid;border-color:transparent;bo
 
 .plan-i{font:inherit;text-align:start;width:100%;cursor:pointer;color:var(--ink)}.plan-i:hover{border-color:var(--accent)}
 .plan-i.done{opacity:.6;cursor:default}
+.pitem{gap:6px}
 
 .deptbar{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:14px;padding:8px 12px;box-shadow:0 1px 2px rgba(16,40,48,.05),0 4px 14px rgba(16,40,48,.05)}
 .deptbar select{width:auto;flex:1;max-width:280px;font-weight:600}
+
+.langbtn{font:inherit;font-weight:700;font-size:13px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.14);color:#fff;border-radius:10px;padding:6px 11px;cursor:pointer}
+.langbtn:hover{background:rgba(255,255,255,.25)}
+html[dir="ltr"] body{font-family:"IBM Plex Sans Arabic",system-ui,"Segoe UI",sans-serif}
 </style>
 </head>
 <body>
@@ -222,11 +227,34 @@ details.more{background:var(--bg);border-style:solid;border-color:transparent;bo
   <div class="brand"><img id="logo" alt="HMC Group" style="height:38px;display:none"><div class="mark" id="mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg></div>
    <div><h1 id="appName">نبض الميدان</h1><small id="who">HMC Diagnostics</small></div></div>
   <nav id="nav"></nav>
+  <button type="button" id="langBtn" class="langbtn" data-nt aria-label="Language / اللغة">EN</button>
 </div></header>
 <main id="app"><div class="loading">جارِ التحميل…</div></main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
+let LANG=(()=>{try{return localStorage.getItem("lang")==="en"?"en":"ar";}catch(e){return "ar";}})();
+const EN={"وضع التجربة — كل الإيميلات (حتى اللي رايحة للمناديب والمشرفين) تيجي على إيميلات الإشعار بس": "Test mode — all emails (even those meant for reps and supervisors) go only to the notification emails", "ملخص يومي بالإيميل الساعة 8 بالليل (كل مندوب عمل كام زيارة ومين ما زارش)": "Daily summary email at 8 PM (visits per rep and who made none)", "اختار اسمك واكتب الرقم السري بتاعك. هتدخل مرة واحدة بس على الموبايل ده": "Choose your name and enter your PIN. You only need to sign in once on this phone", "بيمسح كل الزيارات المتسجلة (مفيد بعد فترة التجربة). مفيش رجوع": "Deletes all recorded visits (useful after the trial period). This can't be undone", "لازم تسمح بالوصول للموقع (Location) من إعدادات المتصفح": "Please allow Location access in your browser settings", "مفيش إيميل متسجل باسمك — كلّم مديرك يبعتلك الرقم السري": "No email is registered for you — ask your manager to send your PIN", "فيه تعديلات ما اتحفظتش — اضغط تاني للخروج من غير حفظ": "You have unsaved changes — tap again to leave without saving", "الإيميلات اللي يوصلها إشعار الزيارات (افصل بفاصلة)": "Emails that receive visit notifications (comma-separated)", "مثال: عرض جهاز Maglumi على مدير المختبر وأخد ميعاد Demo": "e.g. Present Maglumi to the lab manager and book a demo", "مثال: عرض جهاز Maglumi على مدير المختبر وأخد ميعاد": "e.g. Present Maglumi to the lab manager and book a", "اسم العميل، هدف الزيارة، والنتيجة إجباري دايمًا.": "Client name, visit purpose and outcome are always required.", "اسم العميل، هدف الزيارة، والنتيجة إجباري دايمًا": "Client name, visit purpose and outcome are always required", "اختار اسمك الأول وبعدين دوس نسيت الرقم السري": "Choose your name first, then tap Forgot PIN", "مقدرناش نحدد الموقع — اتأكد إن الـ GPS شغّال": "Couldn't get your location — make sure GPS is on", "مفيش حقول إضافية لسه — زوّد اللي محتاجه تحت.": "No custom fields yet — add what you need below.", "مفيش حقول إضافية لسه — زوّد اللي محتاجه تحت": "No custom fields yet — add what you need below", "بُص على الإيميل (وفولدر Junk لو مش لاقيه)": "check your email (and the Junk folder if you can't find it)", "اتبعت من شوية — استنى دقيقتين وجرّب تاني": "Already sent — wait two minutes and try again", "ملاحظة (اختياري للاعتماد — مطلوبة للرفض)": "Note (optional to approve — required to return)", "اسم العميل (اختياري — تقدر تكتبه بعدين)": "Client name (optional — you can add it later)", "تارجت الزيارات في الأسبوع (لكل مندوب)": "Weekly visit target (per rep)", "اتكتب اسم العميل — دوس وصلت لما توصل": "Client name filled in — tap Arrived when you get there", "مفيش إيميل مدير متسجل في الإعدادات": "No manager email is set in Settings", "مفيش خطة في الأسبوع ده عشان أنسخها": "There's no plan in that week to copy", "إيميل لما المندوب يوصل عند العميل": "Email when a rep arrives at a client", "اكتب سبب الرفض أو المطلوب تعديله": "Write the reason or what needs changing", "اكتب المطلوب تعديله في الملاحظة": "Write what needs changing in the note", "إيميل لما المندوب ينهي الزيارة": "Email when a rep finishes a visit", "اسحب يمين وشمال لو الهيكل عريض": "Swipe left/right if the chart is wide", "الموبايل مش بيدعم تحديد الموقع": "This phone doesn't support location", "انت مش المدير المباشر للشخص ده": "You're not this person's direct manager", "أي حاجة مهمة حصلت في الزيارة…": "Anything important from the visit…", "اختار اسمك واكتب الرقم السري": "Choose your name and enter your PIN", "كل مندوب بيعمل خطته من صفحته ← مديره المباشر يعتمدها ← توصلك هنا وعلى الإيميل.": "Each rep builds their plan on their page → their direct manager approves it → it reaches you here and by email.", "لسه مفيش زيارات — ضيف من فوق": "No visits yet — add from above", "مثال: عدد الأجهزة عند العميل": "e.g. Number of analyzers at the client", "مثال: مستشفى الحبيب – العليا": "e.g. Al Habib Hospital – Olaya", "مفيش خطة في الأسبوع اللي فات": "There's no plan last week", "اكتب سبب الرجوع في الملاحظة": "Write the reason in the note", "جارِ تجهيز التقرير… (ثواني)": "Preparing the report… (a few seconds)", "ملاحظة (مطلوبة لو هترجّعها)": "Note (required if returning it)", "هيتبعت موقعك تلقائي للإدارة": "Your location is sent to management automatically", "تم الحفظ ✓ والتطبيق اتحدّث": "Saved ✓ and the app is updated", "فيه تعديلات لسه ما اتحفظتش": "You have unsaved changes", "اكتب إيميل واحد على الأقل": "Enter at least one email", "الخطة دي مش مستنية اعتماد": "This plan isn't awaiting approval", "انسخ خطة الأسبوع اللي فات": "Copy last week's plan", "تم إنهاء الزيارة وإرسالها ✓": "Visit finished and sent ✓", "تم إنهاء الزيارة وإرسالها": "Visit finished and sent", "الاختيارات (افصل بفاصلة)": "Options (comma-separated)", "الاختيارات مفصولة بفاصلة": "Options separated by commas", "الاسم أو الرقم السري غلط": "Wrong name or PIN", "الرقم السري للوحة المدير": "Manager dashboard PIN", "المنتجات اللي اتكلم عنها": "Products discussed", "متأكد؟ اضغط تاني للإرسال": "Sure? Tap again to send", "مفيش زيارات في الفترة دي": "No visits in this period", "اكتب اختيارين على الأقل": "Enter at least two options", "اللي المندوب لازم يملاه": "What the rep must fill in", "رقم تواصل أو إيميل صحيح": "a valid phone number or email", "✅ إنهاء الزيارة وإرسالها": "✅ Finish & send visit", "إنهاء الزيارة وإرسالها": "Finish & send visit", "إيميل (أو أكتر بفاصلة)": "Email (or several, comma-separated)", "الرقم السري للمدير غلط": "Wrong manager PIN", "القيمة المتوقعة (ريال)": "Expected value (SAR)", "القيمة المتوقعة (ر.س)": "Expected value (SAR)", "تم التسجيل بدون لوكيشن": "Logged without location", "رقم التواصل أو الإيميل": "Phone or email", "ضيف زيارات للخطة الأول": "Add visits to the plan first", "كل المتابعات في موعدها": "All follow-ups are on time", "متأكد؟ اضغط تاني للمسح": "Sure? Tap again to delete", "اتبعت الرقم السري على": "PIN sent to", "الزيارة عبارة عن إيه؟": "What is the visit about?", "جارِ تحميل الإعدادات…": "Loading settings…", "مديره المباشر يعتمدها": "their direct manager approves it", "مينفعش يكون مدير نفسه": "A person can't be their own manager", "اكتب اسم الحقل الأول": "Enter the field name first", "الأماكن الأكثر زيارة": "Most visited places", "حقول إضافية خاصة بيك": "Your custom fields", "مفيش زيارات في الخطة": "No visits in the plan", "مقدرناش نحمّل المنصة": "Couldn't load the platform", "اتضاف — متنساش تحفظ": "Added — don't forget to save", "الاعتماد من الإدارة": "Approved by management", "حصل خطأ — جرّب تاني": "Something went wrong — try again", "عملاء محتاجين زيارة": "Clients that need a visit", "مثال: إرسال عرض سعر": "e.g. Send a quotation", "مثال: متابعة عرض سعر Snibe": "e.g. Follow up on Snibe quotation", "اختار القسم الأول…": "Choose the department first…", "اكتب أهداف الزيارة": "Enter the visit goals", "اكتب الإيميل الأول": "Enter the email first", "الرقم السري للمدير": "Manager PIN", "العملاء المستهدفون": "Target clients", "المتابعات المطلوبة": "Follow-ups due", "المستشفى / المختبر": "Hospital / lab", "انت المدير المباشر": "You're the direct manager", "سجّل من غير لوكيشن": "Log without location", "في الفترة المختارة": "in the selected period", "كل العملاء متزارين": "All clients have been visited", "أي يوم في الأسبوع": "Any day this week", "اختار نوع الزيارة": "Choose the visit type", "اضغط تاني للتأكيد": "Tap again to confirm", "اكتب اختيار جديد…": "Type a new option…", "الزيارة مش موجودة": "Visit not found", "الشخص اللي قابلته": "Person you met", "جارِ تحديد موقعك…": "Getting your location…", "جارِ تحميل الخطط…": "Loading plans…", "زيارات جارية الآن": "Visits in progress", "في الميدان دلوقتي": "In the field now", "نسيت الرقم السري؟": "Forgot PIN?", "اختار اسمك الأول": "Choose your name first", "الأسبوع اللي فات": "Last week", "المندوب مش موجود": "Rep not found", "بانتظار الاعتماد": "Awaiting approval", "جارِ تحميل خطتك…": "Loading your plan…", "قيمة الفرص (ر.س)": "Opportunity value (SAR)", "لسه ما قدّمش خطة": "No plan submitted yet", "اتبعتت للاعتماد ✓": "Sent for approval ✓", "اكتب اسم العميل": "Enter the client name", "المستهدف للفترة": "target for the period", "الهيكل التنظيمي": "Org chart", "تم تحديد الموقع": "Location captured", "زيارات النهارده": "Today's visits", "ضيف زيارة للخطة": "Add a visit to the plan", "لسه ما عملش خطة": "Hasn't made a plan yet", "لسه مفيش زيارات": "No visits yet", "متطلبات الزيارة": "Visit requirements", "مسح كل الزيارات": "Delete all visits", "وصلت عند العميل": "I've arrived at the client", "أكتر من اختيار": "Multiple choice", "أهداف الزيارات": "Visit goals", "إضافة شخص جديد": "Add a new person", "اترجعت للتعديل": "Returned for changes", "الشخص مش موجود": "Person not found", "المدير المباشر": "Direct manager", "المسمى الوظيفي": "Job title", "تفاصيل الزيارة": "Visit details", "تم إرسال موقعك ✓": "Location sent ✓", "رجّعها للتعديل": "Return for changes", "زيارات الأسبوع": "This week's visits", "متابعات متأخرة": "Overdue follow-ups", "متابعات مفتوحة": "Open follow-ups", "موثّقة بلوكيشن": "With location", "أداء المناديب": "Rep performance", "أهداف الزيارة": "Visit purposes", "إلغاء الزيارة": "Cancel visit", "اختار المندوب": "Choose the rep", "الأسبوع الجاي": "Next week", "التقرير لمين؟": "Report for whom?", "الخطوة الجاية": "Next step", "القسم بالكامل": "Whole department", "تفاصيل إضافية": "More details", "جارِ الإرسال…": "Sending…", "جارِ التحميل…": "Loading…", "حفظ الإعدادات": "Save settings", "حفظ التعديلات": "Save changes", "زيارات الفريق": "Team visits", "فتح آخر تقرير": "Open last report", "مدير المبيعات": "Sales manager", "موعد المتابعة": "Follow-up date", "نتائج الزيارة": "Visit outcomes", "أنواع الجهات": "Client types", "أهلاً بيك في": "Welcome to", "جارِ الدخول…": "Signing in…", "دخول المندوب": "Rep sign-in", "زيارات الخطة": "Planned visits", "صفات المسؤول": "Contact roles", "طلّع التقرير": "Generate report", "محتاجة تعديل": "Needs changes", "مسح الزيارات": "Delete visits", "آخر زياراتي": "My recent visits", "إضافة الحقل": "Add field", "إضافة للخطة": "Add to plan", "اختار اسمك…": "Choose your name…", "اختيار واحد": "Single choice", "الأسبوع غلط": "Invalid week", "الرقم السري": "PIN", "بدون لوكيشن": "No location", "جارِ الحفظ…": "Saving…", "خطة الأسبوع": "Weekly plan", "زيارة جارية": "Visit in progress", "صفة المسؤول": "Contact's role", "لوحة المدير": "Dashboard", "نوع الزيارة": "Visit type", "هدف الزيارة": "Visit purpose", "أوامر شراء": "Purchase orders", "اسم العميل": "Client name", "اسم المنصة": "Platform name", "اكتب الاسم": "Enter the name", "تسجيل خروج": "Sign out", "خطط الفريق": "Team plans", "خطط معتمدة": "Approved plans", "صباح الخير": "Good morning", "عروض أسعار": "Quotations", "كل الأقسام": "All departments", "مساء الخير": "Good afternoon", "مساء النور": "Good evening", "آخر زيارة": "Last visit", "اسم الحقل": "Field name", "الإعدادات": "Settings", "القسم كله": "Whole department", "حاول تاني": "Try again", "خطط فريقك": "Your team's plans", "فتح الشيت": "Open sheet", "ما اتزارش": "Not visited", "نوع الجهة": "Client type", "التقارير": "Reports", "الزيارات": "Visits", "اللوكيشن": "Location", "المنتجات": "Products", "النهارده": "Today", "تم الحفظ": "Saved", "نعم / لا": "Yes / No", "إجباري؟": "Required?", "اختياري": "Optional", "الأسبوع": "Week", "الأقسام": "Departments", "الإيميل": "Email", "الخريطة": "Map", "المدينة": "City", "المندوب": "Rep", "المنطقة": "Area", "النتيجة": "Outcome", "زياراتي": "My visits", "ملاحظات": "Notes", "إجباري": "Required", "اعتماد": "Approve", "العميل": "Client", "الفترة": "Period", "الفريق": "Team", "رجّعها": "Return it", "زيارات": "Visits", "متأكد؟": "Sure?", "مرفوضة": "Returned", "معتمدة": "Approved", "إضافة": "Add", "إغلاق": "Close", "إيقاف": "Deactivate", "ابعته": "Send", "الاسم": "Name", "الخطة": "Plan", "الدور": "Role", "الشهر": "Month", "القسم": "Department", "المدن": "Cities", "اليوم": "Day", "تحديث": "Refresh", "تعديل": "Edit", "تفعيل": "Activate", "جارية": "In progress", "زيارة": "Visit", "متأخر": "Late", "مسودة": "Draft", "مندوب": "Rep", "الكل": "All", "خطتي": "My plan", "دخول": "Sign in", "مخفي": "Hidden", "نوعه": "Type", "حذف": "Delete", "عام": "General", "لسه": "Not yet", "نص": "Text", "رقم": "Number", "تاريخ": "Date", "نعم": "Yes", "لا": "No", "الأسبوع ده · ": "This week · ", "الأسبوع ده": "This week", "الشهر ده": "This month", "3 شهور": "3 months", "زيارة مخططة": "Planned visits", "اتنفذت": "Done", "نسبة التنفيذ": "Completion", "📅 خطتي": "📅 My plan", "📋 زيارات الخطة": "📋 Planned visits", "📥 خطط فريقك": "📥 Your team's plans", "📅 خطط الفريق": "📅 Team plans", "📅 خطة الأسبوع": "📅 Weekly plan", "📝 مسودة": "📝 Draft", "⏳ بانتظار الاعتماد": "⏳ Awaiting approval", "✅ معتمدة": "✅ Approved", "↩️ محتاجة تعديل": "↩️ Needs changes", "↩️ مرفوضة": "↩️ Returned", "⏳ بانتظار": "⏳ Pending", "✅ اعتماد": "✅ Approve", "↩️ رجّعها للتعديل": "↩️ Return for changes", "↩️ رجّعها": "↩️ Return", "⏳ لسه": "⏳ Not yet", "⏰ متأخر": "⏰ Late", "❌ ما اتزارش": "❌ Not visited", "اتزار": "Visited", "+ إضافة للخطة": "+ Add to plan", "📋 انسخ خطة الأسبوع اللي فات": "📋 Copy last week's plan", "➕ ضيف زيارة للخطة": "➕ Add a visit to the plan", "تنفيذ الخطط المعتمدة": "Approved plans completion", "المدير المباشر:": "Direct manager:", "اعتمدها/ردّها:": "Decided by:", "📍 وصلت عند العميل": "📍 I've arrived at the client", "📊 الزيارات": "📊 Visits", "📅 الخطة": "📅 Plans", "👥 الفريق": "👥 Team", "📄 التقارير": "📄 Reports", "⚙️ الإعدادات": "⚙️ Settings", "⚙️ عام": "⚙️ General", "📋 متطلبات الزيارة": "📋 Visit requirements", "➕ حقول إضافية خاصة بيك": "➕ Your custom fields", "🗑️ مسح الزيارات": "🗑️ Delete visits", "💾 حفظ الإعدادات": "💾 Save settings", "+ إضافة الحقل": "+ Add field", "+ إضافة": "+ Add", "➕ تفاصيل إضافية": "➕ More details", "(اختياري)": "(optional)", "اختياري)": "optional)", "➕ إضافة شخص جديد": "➕ Add a new person", "تقرير PDF": "PDF report", "📄 طلّع التقرير": "📄 Generate report", "📧 ابعته": "📧 Send", "🔑 الرقم السري": "🔑 PIN", "تابع لـ": "Reports to", "— بدون —": "— None —", "لوحده": "alone", "فريقه": "team", "اختر…": "Choose…", "اختار…": "Choose…", "ملاحظة للمندوب (اختياري)": "Note for the rep (optional)", "العملاء": "Clients", "الخطوة": "Step", "أو اختار من العملاء المعروفين": "Or pick from known clients", "اكتب أول حروف…": "Type the first letters…", "دوس على العميل وهو هيتكتب فوق، وبعدين دوس \"وصلت\" لما توصل.": "Tap a client to fill it in above, then tap \"Arrived\" when you get there.", "العميل \"محتاج زيارة\" بعد (يوم)": "Client \"needs a visit\" after (days)", "اختار اسمك واكتب الرقم السري بتاعك. هتدخل مرة واحدة بس على الموبايل ده.": "Choose your name and enter your PIN. You only need to sign in once on this phone.", "بيمسح كل الزيارات المتسجلة (مفيد بعد فترة التجربة). مفيش رجوع.": "Deletes all recorded visits (useful after the trial period). This can't be undone.", "⚠️ متأكد؟ اضغط تاني للمسح": "⚠️ Sure? Tap again to delete", "تم المسح ✓": "Deleted ✓", "اسم الشخص": "Person's name", "05xxxxxxxx أو name@mail.com": "05xxxxxxxx or name@mail.com", "مثال: Snibe، Mindray، Roche": "e.g. Snibe, Mindray, Roche", "⚠️ بدون لوكيشن": "⚠️ No location", "○ بدون لوكيشن": "○ No location", "● اللوكيشن": "● Location", "— بدون اسم —": "— No name —", "🏢 الأقسام": "🏢 Departments", "🎯 أهداف الزيارة": "🎯 Visit purposes", "✅ نتائج الزيارة": "✅ Visit outcomes", "📦 المنتجات": "📦 Products", "🏥 أنواع الجهات": "🏥 Client types", "📍 المدن": "📍 Cities", "👤 صفات المسؤول": "👤 Contact roles", "🧪 وضع التجربة — كل الإيميلات (حتى اللي رايحة للمناديب والمشرفين) تيجي على إيميلات الإشعار بس": "🧪 Test mode — all emails (even those for reps and supervisors) go only to the notification emails", "📊 ملخص يومي بالإيميل الساعة 8 بالليل (كل مندوب عمل كام زيارة ومين ما زارش)": "📊 Daily summary email at 8 PM (visits per rep and who made none)", "تارجت": "Target", "العملاء (كل عميل في سطر — تقدر تكتب أكتر من واحد)": "Clients (one per line)", "مسؤول": "Contact"};
+EN["الأهداف من الزيارة"]="Visit goals";Object.assign(EN,{"جارِ تحميل العملاء…": "Loading clients…", "🏥 دليل العملاء": "🏥 Client directory", "🏥 العملاء": "🏥 Clients", "من ملف المبيعات + أي عميل جديد بيتزار بيتضاف لوحده، ورقم التواصل بيتحدّث من آخر زيارة.": "From the sales file + any newly visited client is added automatically; contact numbers update from the latest visit.", "🔍 دوّر باسم العميل أو البراند أو المسؤول…": "🔍 Search by client, brand or person…", "كل المدن": "All cities", "الأعلى مبيعات": "Top sales", "الأكثر زيارة": "Most visited", "الأقدم زيارة": "Least recently visited", "بالاسم": "By name", "🆕 عميل جديد": "🆕 New client", "👤 لسه مفيش رقم تواصل — هيتسجل من أول زيارة": "👤 No contact yet — recorded on the first visit", "لسه ما اتزارش": "Not visited yet", "عرض المزيد": "Show more"});const ENL={"نبض الميدان": "FieldPulse", "تعريف بمنتج / جهاز جديد": "New product / analyzer intro", "متابعة عرض سعر": "Quotation follow-up", "عرض توضيحي (Demo)": "Demo", "متابعة تركيب / تدريب": "Installation / training follow-up", "دعم فني / شكوى": "Technical support / complaint", "تحصيل مستحقات": "Payment collection", "مناقصة": "Tender", "زيارة دورية للعميل": "Routine client visit", "تسليم طلبية": "Order delivery", "أخرى": "Other", "تم الاتفاق / أمر شراء": "Agreed / purchase order", "طلب عرض سعر": "Quotation requested", "مهتم — يحتاج متابعة": "Interested — needs follow-up", "تم حل المشكلة": "Issue resolved", "تم التحصيل": "Payment collected", "مؤجل": "Postponed", "غير مهتم": "Not interested", "لم يتم اللقاء": "Didn't meet", "مستشفى حكومي": "Government hospital", "مستشفى خاص": "Private hospital", "مختبر خاص": "Private lab", "مجمع طبي / مستوصف": "Medical complex / clinic", "عيادة": "Clinic", "بنك دم": "Blood bank", "موزع / شريك": "Distributor / partner", "مدير المختبر": "Lab manager", "أخصائي مختبر": "Lab specialist", "طبيب": "Doctor", "مدير المشتريات": "Procurement manager", "الإدارة": "Management", "صيدلي": "Pharmacist", "مهندس أجهزة طبية": "Biomedical engineer", "كواشف": "Reagents", "مستهلكات": "Consumables", "أجهزة هيماتولوجي": "Hematology analyzers", "الرياض": "Riyadh", "جدة": "Jeddah", "مكة المكرمة": "Makkah", "المدينة المنورة": "Madinah", "الدمام": "Dammam", "الخبر": "Khobar", "الظهران": "Dhahran", "الأحساء": "Al-Ahsa", "الجبيل": "Jubail", "القصيم / بريدة": "Qassim / Buraydah", "الطائف": "Taif", "أبها": "Abha", "خميس مشيط": "Khamis Mushait", "تبوك": "Tabuk", "حائل": "Hail", "جازان": "Jazan", "نجران": "Najran", "الباحة": "Al-Baha", "الجوف": "Al-Jouf", "ينبع": "Yanbu", "الأهداف:": "Goals:"};
+Object.keys(ENL).forEach(k=>{if(EN[k]===undefined)EN[k]=ENL[k];});
+const EN_RX=[[new RegExp("^(\\d+) \u0627\u062e\u062a\u064a\u0627\u0631$"),"$1 options"],[new RegExp("^(\\d+) \u0634\u062e\u0635$"),"$1 people"],[new RegExp("^(\\d+) \u0632\u064a\u0627\u0631\u0629 \u2014 \u0644\u0633\u0647 \u0645\u0627 \u0628\u0639\u062a\u0647\u0627\u0634$"),"$1 visits \u2014 not sent yet"],[new RegExp("^\u0627\u062a\u0645\u0633\u062d\u062a (\\d+) \u0632\u064a\u0627\u0631\u0629$"),"$1 visits deleted"],[new RegExp("^\u0627\u062a\u0646\u0633\u062e (\\d+) \u0639\u0645\u064a\u0644$"),"$1 clients copied"],[new RegExp("^\u0646\u0627\u0642\u0635: (.*)$"),"Missing: $1"],[new RegExp("^\ud83d\udce4 \u0627\u0628\u0639\u062a \u0627\u0644\u062e\u0637\u0629 \u0644\u0640 (.*) \u0644\u0644\u0627\u0639\u062a\u0645\u0627\u062f$"),"\ud83d\udce4 Send the plan to $1 for approval"],[new RegExp("^\u062a\u0646\u0641\u064a\u0630 \u0627\u0644\u062e\u0637\u0637 \u0627\u0644\u0645\u0639\u062a\u0645\u062f\u0629 \\((.*)\\)$"),"Approved plans completion ($1)"],[new RegExp("^\u0645\u0646 (.*)$"),"Since $1"],[new RegExp("^\u0627\u062a\u0628\u0639\u062a \u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u0633\u0631\u064a \u0639\u0644\u0649 (.*)$"),"PIN sent to $1"],[new RegExp("^\u062a\u0639\u062f\u064a\u0644 (.*)$"),"Edit $1"],[new RegExp("^\u062d\u0630\u0641 (.*)$"),"Delete $1"],[new RegExp("^(.*) \u0644\u0648\u062d\u062f\u0647$"),"$1 alone"],[new RegExp("^(.*) \\+ \u0641\u0631\u064a\u0642\u0647$"),"$1 + team"],[new RegExp("^(\\d+) \u062f$"),"$1 min"],[new RegExp("^\u062e\u0637\u062a\u064a \ud83d\udd34$"),"My plan \ud83d\udd34"]];
+EN_RX.push([/^🧾 آخر شراء (.*)$/,"🧾 Last purchase $1"],[/^🧑‍💼 مسؤول المبيعات: (.*)$/,"🧑‍💼 Account manager: $1"],[/^🚗 (\d+) زيارة · آخرها (.*)$/,"🚗 $1 visits · last $2"],[/^🚗 لسه ما اتزارش$/,"🚗 Not visited yet"],[/^اتضاف (\d+) عميل.*$/,"$1 clients added"]);
+const EN_SUB=Object.keys(EN).filter(k=>ENL[k]===undefined&&k.includes(" ")&&k.length>=6).sort((a,b)=>b.length-a.length);
+const HAS_AR=/[\u0600-\u06FF]/;
+function trStr(t){if(!t||!HAS_AR.test(t))return null;const s=t.trim();if(EN[s]!==undefined)return t.replace(s,EN[s]);
+  for(const [r,x] of EN_RX){if(r.test(s)){const m=s.replace(r,x);const m2=EN[m.replace(/^.*?\$1/,"")]?m:m;return t.replace(s,trStr(m2)||m2);}}
+  const pm=s.match(/^([^\u0600-\u06FF\s]+\s+)(.+)$/);if(pm&&EN[pm[2]]!==undefined)return t.replace(s,pm[1]+EN[pm[2]]);
+  let o=t;for(const k of EN_SUB){if(o.includes(k))o=o.split(k).join(EN[k]);}return o!==t?o:null;}
+let TR_BUSY=false;
+function applyLang(root){if(LANG!=="en"||TR_BUSY||!root)return;TR_BUSY=true;try{
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;const ns=[];while(n=w.nextNode())ns.push(n);
+  ns.forEach(x=>{const p=x.parentNode;if(p&&(p.tagName==="SCRIPT"||p.tagName==="STYLE"||p.closest&&p.closest("[data-nt]")))return;const v=trStr(x.nodeValue);if(v!=null&&v!==x.nodeValue)x.nodeValue=v;});
+  (root.querySelectorAll?root.querySelectorAll("[placeholder],[aria-label],[title]"):[]).forEach(el=>["placeholder","aria-label","title"].forEach(a=>{const v=el.getAttribute(a);const t=v&&trStr(v);if(t!=null&&t!==v)el.setAttribute(a,t);}));
+  (root.querySelectorAll?root.querySelectorAll('[data-pw="-7"],[data-mpw="-7"]'):[]).forEach(b=>b.textContent="←");
+  (root.querySelectorAll?root.querySelectorAll('[data-pw="7"],[data-mpw="7"]'):[]).forEach(b=>b.textContent="→");
+ }finally{TR_BUSY=false;}}
+if(LANG==="en"){document.documentElement.lang="en";document.documentElement.dir="ltr";}
+new MutationObserver(ms=>{if(LANG!=="en"||TR_BUSY)return;const set=new Set();ms.forEach(m=>{if(m.type==="characterData")set.add(m.target.parentNode);else m.addedNodes.forEach(x=>set.add(x.nodeType===3?x.parentNode:x));});set.forEach(x=>x&&applyLang(x));}).observe(document.body,{subtree:true,childList:true,characterData:true});
 let LISTS={purposes:["تعريف بمنتج / جهاز جديد","متابعة عرض سعر","عرض توضيحي (Demo)","متابعة تركيب / تدريب","دعم فني / شكوى","تحصيل مستحقات","مناقصة","زيارة دورية للعميل","تسليم طلبية","أخرى"],
  outcomes:["تم الاتفاق / أمر شراء","طلب عرض سعر","مهتم — يحتاج متابعة","تم حل المشكلة","تم التحصيل","مؤجل","غير مهتم","لم يتم اللقاء"],
  clientTypes:["مستشفى حكومي","مستشفى خاص","مختبر خاص","مجمع طبي / مستوصف","عيادة","بنك دم","موزع / شريك","أخرى"],
@@ -243,8 +271,8 @@ const outCls=o=>isO(o)||/^تم /.test(o||"")?"pg":/غير|لم /.test(o||"")?"pb
 const S={dept:(()=>{try{return JSON.parse(localStorage.getItem("mdept"))||"";}catch(e){return "";}})(),init:null,rep:null,pin:null,state:null,view:"home",mgrPin:null,dash:null,f:{period:"week",rep:"",outcome:"",team:""},rpt:null,mtab:"visits",edit:null,rp:{person:"",withTeam:true,period:"month"}};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const fmtD=ts=>new Date(ts).toLocaleDateString("ar-EG-u-nu-latn",{weekday:"short",day:"numeric",month:"short"});
-const fmtT=ts=>new Date(ts).toLocaleTimeString("ar-EG-u-nu-latn",{hour:"numeric",minute:"2-digit"});
+const fmtD=ts=>new Date(ts).toLocaleDateString(LANG==="en"?"en-GB":"ar-EG-u-nu-latn",{weekday:"short",day:"numeric",month:"short"});
+const fmtT=ts=>new Date(ts).toLocaleTimeString(LANG==="en"?"en-GB":"ar-EG-u-nu-latn",{hour:"numeric",minute:"2-digit"});
 const fmtN=n=>Number(n||0).toLocaleString("en-US");
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
 const store={get(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
@@ -253,16 +281,16 @@ const API='https://script.google.com/macros/s/AKfycbwmPUjMauq_G8xeaAVMaNnuJIGbhm
 const opts=(a,ph)=>(ph?`<option value="">${ph}</option>`:"")+a.map(x=>`<option>${esc(x)}</option>`).join("");
 
 function drawNav(){
-  const items=S.rep?[["home","زيارة"],["mine","زياراتي"],["mgr","لوحة المدير"]]:[["home","دخول المندوب"],["mgr","لوحة المدير"]];
+  const items=S.rep?[["home","زيارة"],["plan","خطتي"+(S.state&&S.state.teamPending?" 🔴":"")],["mine","زياراتي"],["mgr","لوحة المدير"]]:[["home","دخول المندوب"],["mgr","لوحة المدير"]];
   $("#nav").innerHTML=items.map(([k,t])=>`<button type="button" data-v="${k}" ${S.view===k?'aria-current="page"':""}>${t}</button>`).join("");
-  $("#nav").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.view=b.dataset.v;render();});
+  $("#nav").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.view=b.dataset.v;if(S.view==="plan")S.mp=null;render();});
   $("#who").textContent=S.rep?S.rep.name:"HMC Diagnostics";
 }
 function render(){drawNav();const a=$("#app");
   if(S.dash&&!S.dash._f){S.dashRaw=S.dash;S.dash=deptFilter(S.dash);}
   if(S.view==="mgr"){a.innerHTML=S.dash?viewDash():viewMgrLogin();bindMgr();return;}
   if(!S.rep){a.innerHTML=viewLogin();bindLogin();return;}
-  a.innerHTML=S.view==="mine"?viewMine():viewHome();bindRep();
+  a.innerHTML=S.view==="mine"?viewMine():S.view==="plan"?viewMyPlan():viewHome();bindRep();
 }
 
 function viewLogin(){
@@ -360,7 +388,7 @@ function readCustom(ff){const ex={};(FIELDS.custom||[]).forEach(c=>{const id="x_
   else{const el=document.getElementById(id);ex[c.id]=el?el.value.trim():"";}});return ex;}
 function planCard(pl){if(!pl||!pl.length)return "";const d=pl.filter(p=>p.done).length;const td=ymd(Date.now());
   const srt=[...pl].sort((a,b)=>(a.done-b.done)||((a.day||"9")<(b.day||"9")?-1:1));
-  return `<section class="card"><div class="ch"><h2>📅 خطة الأسبوع</h2><span class="pill ${d===pl.length?"pg":"pn"} num">${d}/${pl.length}</span></div>
+  return `<section class="card"><div class="ch"><h2>📅 خطة الأسبوع</h2><span class="row" style="gap:6px">${stPill(S.state.planStatus)}<span class="pill ${d===pl.length?"pg":"pn"} num">${d}/${pl.length}</span></span></div>
    <div class="bar ${d===pl.length?"ok":""}" style="margin-bottom:10px"><i style="width:${Math.round(d/pl.length*100)}%"></i></div>
    <div class="vlist">${srt.map(p=>`<button type="button" class="vi plan-i ${p.done?"done":""}" data-plc="${esc(p.client)}" ${p.done?"disabled":""}>
      <div class="r1"><strong>${p.done?"✅ ":""}${esc(p.client)}</strong>${p.done?`<span class="pill pg">اتزار</span>`:p.day&&p.day<td?`<span class="pill pw">متأخر</span>`:p.day===td?`<span class="pill pn">النهارده</span>`:p.day?`<span class="small muted">${DAYS[new Date(p.day+"T00:00:00").getDay()]}</span>`:""}</div>
@@ -410,6 +438,21 @@ function bindRep(){
     }
   };
   if($("#ff")) prefill();
+  if(S.view==="plan"){
+    if(!S.mpw)S.mpw=ymd(weekStart());
+    const loadM=async(fn,...a)=>{try{S.mp=await call(fn,S.rep.id,S.pin,...a);render();return S.mp;}catch(ex){toast(ex.message);}};
+    if((!S.mp||S.mp.week!==S.mpw)&&!S.mpLoading){S.mpLoading=true;loadM("apiMyPlan",S.mpw).finally(()=>{S.mpLoading=false;});}
+    document.querySelectorAll("[data-mpw]").forEach(b=>b.onclick=()=>{S.mpw=addDays(S.mpw,+b.dataset.mpw);render();});
+    const ad=$("#mpAdd");if(ad)ad.onclick=async()=>{const it={week:S.mpw,client:$("#mpClient").value.trim(),day:$("#mpDay").value,purpose:(document.querySelector('input[name="mpPurp"]:checked')||{}).value||"",goals:$("#mpGoals").value.trim()};
+      const miss=[];if(!it.client)miss.push("العميل");if(!it.purpose)miss.push("نوع الزيارة");if(!it.goals)miss.push("الأهداف");if(miss.length){toast("ناقص: "+miss.join("، "));return;}
+      ad.disabled=true;const r=await loadM("apiMyPlanAdd",it);if(r)toast("اتضافت ✓");else ad.disabled=false;};
+    const cp=$("#mpCopy");if(cp)cp.onclick=async()=>{cp.disabled=true;await loadM("apiMyPlanCopy",addDays(S.mpw,-7),S.mpw);};
+    document.querySelectorAll("[data-mpdel]").forEach(b=>b.onclick=async()=>{if(b.dataset.a!=="1"){b.dataset.a="1";b.textContent="متأكد؟";return;}b.disabled=true;await loadM("apiMyPlanDel",b.dataset.mpdel,S.mpw);});
+    const sb=$("#mpSubmit");if(sb)sb.onclick=async()=>{if(sb.dataset.a!=="1"){sb.dataset.a="1";sb.textContent="متأكد؟ اضغط تاني للإرسال";return;}sb.disabled=true;const r=await loadM("apiMyPlanSubmit",S.mpw);if(r){toast("اتبعتت للاعتماد ✓");window.scrollTo(0,0);}};
+    const td=(id,ok)=>async b=>{const n=($("#tn_"+id)||{}).value||"";if(!ok&&!n.trim()){toast("اكتب المطلوب تعديله في الملاحظة");return;}b.disabled=true;const r=await loadM("apiPlanDecide",id,S.mpw,ok,n);if(r){toast(ok?"اتعتمدت ✓":"اترجعت للتعديل");try{S.state=await call("apiLogin",S.rep.id,S.pin);drawNav();}catch(e){}}else b.disabled=false;};
+    document.querySelectorAll("[data-tok]").forEach(b=>b.onclick=()=>td(b.dataset.tok,true)(b));
+    document.querySelectorAll("[data-tno]").forEach(b=>b.onclick=()=>td(b.dataset.tno,false)(b));
+  }
   document.querySelectorAll("[data-plc]").forEach(b=>b.onclick=()=>{const c=$("#cName");if(c){c.value=b.dataset.plc;window.scrollTo({top:0,behavior:"smooth"});c.focus();toast("اتكتب اسم العميل — دوس وصلت لما توصل");}});
   const ff=$("#ff");
   if(ff) ff.onsubmit=async e=>{e.preventDefault();const er=$("#fErr");er.hidden=true;const val=id=>{const el=$("#"+id);return el?el.value.trim():"";};
@@ -467,47 +510,97 @@ function orgChart(vs){
     ${r.vacant?`<span class="org-node vac">شاغر <small>${esc(r.role&&r.role!=="شاغر"?r.role:"مكان متاح")}</small></span>`:
     `<button type="button" class="org-node ${S.f.team===r.id?"sel":""}" data-team="${esc(r.id)}"><b>${esc(r.name)}</b> <small>${esc(r.role||r.position||"")}</small> <span class="pill pn num">${sub(r.id)}</span></button>`}</div>`).join("");
 }
-function mtabs(){const t=S.mtab;return `<div class="seg mt" role="tablist">${[["visits","📊 الزيارات"],["plan","📅 الخطة"],["team","👥 الفريق"],["reports","📄 التقارير"],["settings","⚙️ الإعدادات"]].map(([k,x])=>`<button type="button" data-mtab="${k}" aria-pressed="${t===k}">${x}</button>`).join("")}</div>`;}
+function mtabs(){const t=S.mtab;return `<div class="seg mt" role="tablist">${[["visits","📊 الزيارات"],["plan","📅 الخطة"],["clients","🏥 العملاء"],["team","👥 الفريق"],["reports","📄 التقارير"],["settings","⚙️ الإعدادات"]].map(([k,x])=>`<button type="button" data-mtab="${k}" aria-pressed="${t===k}">${x}</button>`).join("")}</div>`;}
 function deptBar(){const D=S.dashRaw;if(!D)return "";const d0=(LISTS.depts||[])[0]||"";const ds=[...new Set([...(LISTS.depts||[]),...D.reps.map(r=>r.dept||d0)])];
   if(ds.length<2)return "";return `<div class="deptbar"><span>🏢</span><select id="dSel" aria-label="القسم"><option value="">كل الأقسام</option>${ds.map(d=>`<option ${S.dept===d?"selected":""}>${esc(d)}</option>`).join("")}</select><span class="small muted">${D.reps.filter(r=>!S.dept||(r.dept||d0)===S.dept).length} شخص</span></div>`;}
 function deptFilter(D){const d0=(LISTS.depts||[])[0]||"";if(!S.dept)return Object.assign({},D,{_f:1});
   const reps=D.reps.filter(r=>(r.dept||d0)===S.dept);const ids=new Set(reps.map(r=>r.id));
   return Object.assign({},D,{_f:1,reps,visits:D.visits.filter(v=>ids.has(v.repId))});}
-function viewDash(){return deptBar()+mtabs()+(S.mtab==="plan"?viewPlan():S.mtab==="team"?viewTeam():S.mtab==="reports"?viewReports():S.mtab==="settings"?viewSettings():viewVisits());}
+function viewDash(){return deptBar()+mtabs()+(S.mtab==="clients"?viewClients():S.mtab==="plan"?viewPlan():S.mtab==="team"?viewTeam():S.mtab==="reports"?viewReports():S.mtab==="settings"?viewSettings():viewVisits());}
 function ymd(t){const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function addDays(w,n){const d=new Date(w+"T00:00:00");d.setDate(d.getDate()+n);return ymd(d);}
-const DAYS=["الأحد","الاتنين","التلات","الأربع","الخميس","الجمعة","السبت"];
+const DAYS=LANG==="en"?["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]:["الأحد","الاتنين","التلات","الأربع","الخميس","الجمعة","السبت"];
 function wkLabel(w){const e=addDays(w,6);const f=x=>{const d=new Date(x+"T00:00:00");return d.getDate()+"/"+(d.getMonth()+1);};return `${f(w)} – ${f(e)}`;}
+function stPill(s){return ({draft:`<span class="pill pn">📝 مسودة</span>`,pending:`<span class="pill pw">⏳ بانتظار الاعتماد</span>`,approved:`<span class="pill pg">✅ معتمدة</span>`,rejected:`<span class="pill pb">↩️ محتاجة تعديل</span>`,none:`<span class="pill pb">لسه ما قدّمش خطة</span>`})[s]||"";}
+function dayTxt(d){return d?`${DAYS[new Date(d+"T00:00:00").getDay()]} ${d.slice(5).split("-").reverse().join("/")}`:"";}
+function planItem(i,o){o=o||{};const td=ymd(Date.now());
+  const st=o.track?(i.done?`<span class="pill pg">✅ اتزار ${fmtD(i.doneAt)}</span>`:o.past?`<span class="pill pb">❌ ما اتزارش</span>`:(i.day&&i.day<td)?`<span class="pill pw">⏰ متأخر</span>`:`<span class="pill pn">⏳ لسه</span>`):"";
+  return `<div class="vi pitem"><div class="r1"><strong>${esc(i.client)}</strong>${st}</div>
+   <div class="meta">${i.day?`<span>📆 ${dayTxt(i.day)}</span>`:""}${i.purpose?`<span>🎯 ${esc(i.purpose)}</span>`:""}${i.outcome?`<span>${esc(i.outcome)}</span>`:""}</div>
+   ${i.goals?`<div class="small"><b>الأهداف:</b> ${esc(i.goals)}</div>`:""}
+   ${o.del?`<button type="button" class="btn d sm" data-mpdel="${esc(i.id)}" style="justify-self:start">حذف</button>`:""}</div>`;}
+function weekNav(w,cur,attr){return `<div class="seg"><button type="button" ${attr}="-7" aria-label="الأسبوع اللي فات">→</button><button type="button" aria-pressed="true" style="min-width:150px">${w===cur?"الأسبوع ده · ":""}${wkLabel(w)}</button><button type="button" ${attr}="7" aria-label="الأسبوع الجاي">←</button></div>`;}
 function viewPlan(){
-  const P=S.plan;if(!P||P.week!==S.pw)return `<div class="card loading">جارِ تحميل الخطة…</div>`;
-  const reps=S.dash.reps.filter(r=>r.active!==false&&!/منسق|مساعد|سكرتير/.test((r.role||"")+" "+(r.position||"")));
-  const ids=new Set(S.dash.reps.map(r=>r.id));const PI=P.items.filter(i=>ids.has(i.repId));const fr=S.pf||"";const items=PI.filter(i=>!fr||i.repId===fr);
-  const past=S.pw<P.current,cur=S.pw===P.current;
-  const by={};PI.forEach(i=>{const o=by[i.repId]=by[i.repId]||{n:0,d:0};o.n++;if(i.done)o.d++;});
-  const tot=PI.length,done=PI.filter(i=>i.done).length,pc=tot?Math.round(done/tot*100):0;
-  const names=[...new Set([...(S.dash.clients||[]).map(c=>c.name),...S.dash.visits.map(v=>v.client).filter(Boolean)])];
-  const st=i=>i.done?`<span class="pill pg">✅ اتزار ${fmtD(i.doneAt)}</span>`:past?`<span class="pill pb">❌ ما اتزارش</span>`:(i.day&&i.day<ymd(Date.now()))?`<span class="pill pw">⏰ متأخر</span>`:`<span class="pill pn">⏳ لسه</span>`;
-  return `<section class="card"><div class="ch"><h2>📅 خطة الأسبوع</h2>
-     <div class="seg"><button type="button" data-pw="-7" aria-label="الأسبوع اللي فات">→</button><button type="button" aria-pressed="true" style="min-width:150px">${cur?"الأسبوع ده · ":""}${wkLabel(S.pw)}</button><button type="button" data-pw="7" aria-label="الأسبوع الجاي">←</button></div></div>
-    <div class="kpis"><div class="kpi"><div class="v num">${tot}</div><div class="l">زيارة مخططة</div></div><div class="kpi"><div class="v num">${done}</div><div class="l">اتنفذت</div></div>
-     <div class="kpi"><div class="v num">${pc}%</div><div class="l">نسبة التنفيذ</div><div class="bar ${pc>=80?"ok":pc<50?"low":""}" style="margin-top:7px"><i style="width:${pc}%"></i></div></div></div>
+  const P=S.plan;if(!P||P.week!==S.pw)return `<div class="card loading">جارِ تحميل الخطط…</div>`;
+  const reps=S.dash.reps.filter(r=>r.active!==false&&!/منسق|مساعد|سكرتير|مدير/.test((r.role||"")+" "+(r.position||"")));
+  const ids=new Set(S.dash.reps.map(r=>r.id));const PI=P.items.filter(i=>ids.has(i.repId));const past=S.pw<P.current;
+  const stOf=id=>(P.statuses||[]).find(x=>x.repId===id)||{status:PI.some(i=>i.repId===id)?"draft":"none"};
+  const ap=reps.filter(r=>stOf(r.id).status==="approved").length,pe=reps.filter(r=>stOf(r.id).status==="pending").length;
+  const appr=PI.filter(i=>stOf(i.repId).status==="approved");const dn=appr.filter(i=>i.done).length;const pc=appr.length?Math.round(dn/appr.length*100):0;
+  const f=S.pfs||"";const shown=reps.filter(r=>!f||stOf(r.id).status===f);
+  return `<section class="card"><div class="ch"><h2>📅 خطط الفريق</h2>${weekNav(S.pw,P.current,"data-pw")}</div>
+    <div class="small muted" style="margin-bottom:10px">كل مندوب بيعمل خطته من صفحته ← مديره المباشر يعتمدها ← توصلك هنا وعلى الإيميل.</div>
+    <div class="kpis"><div class="kpi"><div class="v num">${ap}/${reps.length}</div><div class="l">خطط معتمدة</div></div><div class="kpi ${pe?"alert":""}"><div class="v num">${pe}</div><div class="l">بانتظار الاعتماد</div></div>
+     <div class="kpi"><div class="v num">${pc}%</div><div class="l">تنفيذ الخطط المعتمدة (${dn}/${appr.length})</div><div class="bar ${pc>=80?"ok":pc<50?"low":""}" style="margin-top:7px"><i style="width:${pc}%"></i></div></div></div>
    </section>
-   <section class="card" style="display:grid;gap:12px"><h2>➕ ضيف للخطة</h2>
+   <div class="seg wide">${[["","الكل"],["approved","✅ معتمدة"],["pending","⏳ بانتظار"],["rejected","↩️ مرفوضة"],["none","لسه"]].map(([k,t])=>`<button type="button" data-pfs="${k}" aria-pressed="${f===k}">${t}</button>`).join("")}</div>
+   ${shown.map(r=>{const x=stOf(r.id);const it=PI.filter(i=>i.repId===r.id);const d=it.filter(i=>i.done).length;
+     return `<section class="card"><div class="ch"><h2>${esc(r.name)}</h2><span class="row" style="gap:6px">${stPill(x.status)}${it.length?`<span class="pill pn num">${d}/${it.length}</span>`:""}</span></div>
+      ${x.directMgr||x.approver?`<div class="small muted" style="margin-bottom:8px">${x.approver?`اعتمدها/ردّها: <b>${esc(x.approver)}</b> ${esc(x.decidedAt||"")}`:`المدير المباشر: ${esc(x.directMgr)}`}${x.note?` — 💬 ${esc(x.note)}`:""}</div>`:""}
+      ${it.length?`<div class="vlist">${it.map(i=>planItem(i,{track:x.status==="approved",past})).join("")}</div>`:`<div class="empty" style="padding:10px">مفيش زيارات في الخطة</div>`}
+      ${x.status==="pending"?`<div class="row" style="margin-top:10px"><input id="mn_${esc(r.id)}" placeholder="ملاحظة (اختياري للاعتماد — مطلوبة للرفض)" style="flex:1;min-width:180px"><button class="btn p sm" type="button" data-mok="${esc(r.id)}">✅ اعتماد</button><button class="btn d sm" type="button" data-mno="${esc(r.id)}">↩️ رجّعها للتعديل</button></div>`:""}
+     </section>`;}).join("")||`<div class="card empty">مفيش حد هنا</div>`}`;
+}
+function viewClients(){
+  const L=S.cl;if(!L)return `<div class="card loading">جارِ تحميل العملاء…</div>`;
+  const q=(S.clq||"").trim().toLowerCase(),city=S.clc||"",srt=S.cls||"sales";
+  const cities=[...new Set(L.map(c=>c.city).filter(Boolean))].sort();
+  let rows=L.filter(c=>(!city||c.city===city)&&(!q||[c.name,c.brands,c.lines,c.salesman,c.contact,c.code].join(" ").toLowerCase().includes(q)));
+  rows.sort(srt==="name"?(a,b)=>a.name.localeCompare(b.name,"ar"):srt==="visits"?(a,b)=>b.visits-a.visits:srt==="nov"?(a,b)=>(a.lastTs||0)-(b.lastTs||0):(a,b)=>(b.s26+b.s25)-(a.s26+a.s25));
+  const tel=p=>p?`<a href="tel:${esc(p)}" dir="ltr">${esc(p)}</a>`:"";
+  return `<section class="card" style="display:grid;gap:10px"><div class="ch"><h2>🏥 دليل العملاء</h2><span class="pill pn num">${rows.length} / ${L.length}</span></div>
+    <div class="small muted">من ملف المبيعات + أي عميل جديد بيتزار بيتضاف لوحده، ورقم التواصل بيتحدّث من آخر زيارة.</div>
+    <input id="clQ" placeholder="🔍 دوّر باسم العميل أو البراند أو المسؤول…" value="${esc(S.clq||"")}">
+    <div class="row"><select id="clC" style="flex:1;min-width:140px"><option value="">كل المدن</option>${cities.map(c=>`<option ${city===c?"selected":""}>${esc(c)}</option>`).join("")}</select>
+     <select id="clS" style="flex:1;min-width:140px">${[["sales","الأعلى مبيعات"],["visits","الأكثر زيارة"],["nov","الأقدم زيارة"],["name","بالاسم"]].map(([k,t])=>`<option value="${k}" ${srt===k?"selected":""}>${t}</option>`).join("")}</select></div>
+   </section>
+   <div class="vlist">${rows.slice(0,S.clN||60).map(c=>`<div class="vi card" style="gap:6px">
+     <div class="r1"><strong>${esc(c.name)}</strong>${c.source==="زيارة جديدة"?`<span class="pill pw">🆕 عميل جديد</span>`:c.brands?`<span class="pill pn">${esc(c.brands)}</span>`:""}</div>
+     <div class="meta">${c.city?`<span>📍 ${esc(c.city)}</span>`:""}${c.code?`<span>#${esc(c.code)}</span>`:""}${c.lastBuy?`<span>🧾 آخر شراء ${esc(c.lastBuy)}</span>`:""}${c.s26||c.s25?`<span class="num">💰 2026: ${fmtN(c.s26)} · 2025: ${fmtN(c.s25)}</span>`:""}</div>
+     ${c.lines?`<div class="small muted">📦 ${esc(c.lines)}</div>`:""}
+     <div class="meta">${c.contact||c.phone?`<span>👤 ${esc(c.contact||"")}${c.role?` (${esc(c.role)})`:""} ${tel(c.phone)}</span>`:`<span class="muted">👤 لسه مفيش رقم تواصل — هيتسجل من أول زيارة</span>`}</div>
+     <div class="meta">${c.salesman?`<span>🧑‍💼 مسؤول المبيعات: ${esc(c.salesman)} ${tel(c.salesPhone)}</span>`:""}<span>🚗 ${c.visits?`${c.visits} زيارة · آخرها ${fmtD(c.lastTs)} (${esc(c.lastRep)})`:"لسه ما اتزارش"}</span></div>
+    </div>`).join("")}</div>
+   ${rows.length>(S.clN||60)?`<button class="btn g" type="button" id="clMore" style="justify-self:center">عرض المزيد</button>`:""}`;
+}
+function viewMyPlan(){
+  const P=S.mp;if(!P||P.week!==S.mpw)return `<div class="card loading">جارِ تحميل خطتك…</div>`;
+  const ed=(P.status==="draft"||P.status==="rejected")&&S.mpw>=P.current;const past=S.mpw<P.current;
+  const names=Object.keys((S.state&&S.state.clients)||{});const d=P.items.filter(i=>i.done).length;
+  return `<section class="card"><div class="ch"><h2>📅 خطتي</h2>${weekNav(S.mpw,P.current,"data-mpw")}</div>
+    <div class="row" style="justify-content:space-between">${stPill(P.items.length||P.status!=="draft"?P.status:"draft")}<span class="small muted">${P.manager?`المدير المباشر: <b>${esc(P.manager)}</b>`:"الاعتماد من الإدارة"}</span></div>
+    ${P.status==="rejected"?`<div class="banner b-err" style="margin-top:10px">↩️ ${esc(P.approver)} رجّع الخطة: <b>${esc(P.note)}</b> — عدّل وابعتها تاني</div>`:""}
+    ${P.status==="approved"?`<div class="banner b-ok" style="margin-top:10px">✅ اعتمدها ${esc(P.approver)} ${esc(P.decidedAt)}${P.note?` — 💬 ${esc(P.note)}`:""} · اتنفذ ${d}/${P.items.length}</div>`:""}
+    ${P.status==="pending"?`<div class="banner b-warn" style="margin-top:10px">⏳ اتبعتت ${esc(P.sentAt)} — مستنية اعتماد ${esc(P.manager||"الإدارة")}</div>`:""}
+   </section>
+   ${ed?`<section class="card" style="display:grid;gap:12px"><h2>➕ ضيف زيارة للخطة</h2>
     <div class="grid">
-     <label class="f" for="plRep">المندوب<select id="plRep"><option value="">اختار…</option>${reps.map(r=>`<option value="${esc(r.id)}" ${S.plRep===r.id?"selected":""}>${esc(r.name)}</option>`).join("")}</select></label>
-     <label class="f" for="plDay">اليوم (اختياري)<select id="plDay"><option value="">أي يوم في الأسبوع</option>${[0,1,2,3,4].map(n=>`<option value="${addDays(S.pw,n)}">${DAYS[n]} ${addDays(S.pw,n).slice(5).split("-").reverse().join("/")}</option>`).join("")}</select></label>
+     <label class="f" for="mpClient">العميل <span class="req">*</span><input id="mpClient" list="mpCl" placeholder="المستشفى / المختبر"><datalist id="mpCl">${names.map(n=>`<option value="${esc(n)}">`).join("")}</datalist></label>
+     <label class="f" for="mpDay">اليوم<select id="mpDay"><option value="">أي يوم في الأسبوع</option>${[0,1,2,3,4].map(n=>`<option value="${addDays(S.mpw,n)}">${dayTxt(addDays(S.mpw,n))}</option>`).join("")}</select></label>
     </div>
-    <label class="f" for="plClient">العملاء <span class="small muted">(كل عميل في سطر — تقدر تكتب أكتر من واحد)</span><textarea id="plClient" rows="3" list="plCl" placeholder="مستشفى الحبيب – العليا&#10;مختبر البرج – الملز"></textarea></label>
-    <label class="f" for="plPick">أو اختار من العملاء المعروفين<input id="plPick" list="plCl" placeholder="اكتب أول حروف…"><datalist id="plCl">${names.map(n=>`<option value="${esc(n)}">`).join("")}</datalist></label>
-    <label class="f" for="plNote">ملاحظة للمندوب (اختياري)<input id="plNote" placeholder="مثال: متابعة عرض سعر Snibe"></label>
-    <div class="row"><button class="btn p" type="button" id="plAdd">+ إضافة للخطة</button>${!past?`<button class="btn g" type="button" id="plCopy">📋 انسخ خطة الأسبوع اللي فات</button>`:""}</div>
+    <div style="display:grid;gap:6px"><span class="small muted" style="font-weight:600">الزيارة عبارة عن إيه؟ <span class="req">*</span></span><div class="chips">${(P.purposes||LISTS.purposes).map((t,i)=>`<label class="chip"><input type="radio" name="mpPurp" value="${esc(t)}"><span>${esc(t)}</span></label>`).join("")}</div></div>
+    <label class="f" for="mpGoals">الأهداف من الزيارة <span class="req">*</span><textarea id="mpGoals" rows="2" placeholder="مثال: عرض جهاز Maglumi على مدير المختبر وأخد ميعاد Demo"></textarea></label>
+    <div class="row"><button class="btn p" type="button" id="mpAdd">+ إضافة للخطة</button>${!P.items.length?`<button class="btn g" type="button" id="mpCopy">📋 انسخ خطة الأسبوع اللي فات</button>`:""}</div>
+   </section>`:""}
+   <section class="card"><div class="ch"><h2>📋 زيارات الخطة</h2><span class="pill pn num">${P.items.length}</span></div>
+    ${P.items.length?`<div class="vlist">${P.items.map(i=>planItem(i,{del:ed,track:P.status==="approved",past})).join("")}</div>`:`<div class="empty">لسه مفيش زيارات — ضيف من فوق 👆</div>`}
+    ${ed&&P.items.length?`<button class="btn p" type="button" id="mpSubmit" style="width:100%;margin-top:12px;padding:14px">📤 ابعت الخطة لـ ${esc(P.manager||"الإدارة")} للاعتماد</button>`:""}
    </section>
-   <section class="card"><div class="ch"><h2>📋 الخطة</h2>
-     <label class="f" for="plF" style="min-width:170px"><select id="plF"><option value="">كل المناديب</option>${reps.map(r=>`<option value="${esc(r.id)}" ${fr===r.id?"selected":""}>${esc(r.name)}${by[r.id]?` (${by[r.id].d}/${by[r.id].n})`:""}</option>`).join("")}</select></label></div>
-    ${items.length?`<div class="vlist">${items.sort((a,b)=>(a.rep+a.day).localeCompare(b.rep+b.day)).map(i=>`<div class="vi"><div class="r1"><strong>${esc(i.client)}</strong>${st(i)}</div>
-      <div class="meta"><span><b>${esc(i.rep)}</b></span>${i.day?`<span>📆 ${DAYS[new Date(i.day+"T00:00:00").getDay()]} ${i.day.slice(5).split("-").reverse().join("/")}</span>`:""}${i.outcome?`<span>${esc(i.outcome)}</span>`:""}${i.note?`<span>📝 ${esc(i.note)}</span>`:""}
-      <button type="button" class="btn d sm" data-pldel="${esc(i.id)}" style="margin-inline-start:auto">حذف</button></div></div>`).join("")}</div>`:`<div class="empty">مفيش خطة للأسبوع ده لسه — ضيف من فوق 👆</div>`}
-   </section>`;
+   ${P.team&&P.team.length?`<section class="card"><div class="ch"><h2>📥 خطط فريقك</h2><span class="small muted">انت المدير المباشر</span></div>
+    <div class="vlist">${P.team.map(t=>`<div class="vi" style="gap:8px"><div class="r1"><strong>${esc(t.name)}</strong>${stPill(t.items.length||t.status!=="draft"?t.status:"none")}</div>
+      ${t.status==="pending"||t.status==="approved"?`<div class="vlist">${t.items.map(i=>planItem(i,{track:t.status==="approved",past})).join("")}</div>`:`<div class="small muted">${t.items.length?`${t.items.length} زيارة — لسه ما بعتهاش`:"لسه ما عملش خطة"}</div>`}
+      ${t.status==="pending"?`<div class="row"><input id="tn_${esc(t.repId)}" placeholder="ملاحظة (مطلوبة لو هترجّعها)" style="flex:1;min-width:170px"><button class="btn p sm" type="button" data-tok="${esc(t.repId)}">✅ اعتماد</button><button class="btn d sm" type="button" data-tno="${esc(t.repId)}">↩️ رجّعها</button></div>`:""}
+     </div>`).join("")}</div></section>`:""}`;
 }
 function viewVisits(){
   const D=S.dash,f=S.f,from=range();
@@ -619,6 +712,7 @@ function viewSettings(){const C=S.cfg;
    <label class="f" for="sNotify">الإيميلات اللي يوصلها إشعار الزيارات (افصل بفاصلة)<input id="sNotify" dir="ltr" value="${esc(C.notify)}"></label>
    <label class="sw"><input type="checkbox" id="sArr" ${C.mailOnArrive?"checked":""}><span></span> إيميل لما المندوب يوصل عند العميل</label>
    <label class="sw"><input type="checkbox" id="sFin" ${C.mailOnFinish?"checked":""}><span></span> إيميل لما المندوب ينهي الزيارة</label>
+   <label class="sw"><input type="checkbox" id="sTest" ${C.testMode?"checked":""}><span></span> 🧪 وضع التجربة — كل الإيميلات (حتى اللي رايحة للمناديب والمشرفين) تيجي على إيميلات الإشعار بس</label>
    <label class="sw"><input type="checkbox" id="sDig" ${C.digest?"checked":""}><span></span> 📊 ملخص يومي بالإيميل الساعة 8 بالليل (كل مندوب عمل كام زيارة ومين ما زارش)</label>
   </section>
   <section class="card" style="display:grid;gap:10px"><div class="ch"><h2>📋 متطلبات الزيارة</h2><span class="small muted">اللي المندوب لازم يملاه</span></div>
@@ -644,7 +738,7 @@ function viewSettings(){const C=S.cfg;
    <button class="btn d" type="button" id="clrV">مسح كل الزيارات</button></section>
   <div class="savebar"><span class="small" id="cfgMsg">${S.cfgDirty?"فيه تعديلات لسه ما اتحفظتش":""}</span><button class="btn p" type="button" id="cfgSave">💾 حفظ الإعدادات</button></div>`;}
 function modeSel(id,v,allowOff){return `<select id="${id}" class="msel" data-msel="${id}">${[["req","إجباري"],["opt","اختياري"]].concat(allowOff?[["off","مخفي"]]:[]).map(([k,t])=>`<option value="${k}" ${v===k?"selected":""}>${t}</option>`).join("")}</select>`;}
-function readGeneral(){const C=S.cfg;if(!$("#sApp"))return;C.appName=$("#sApp").value.trim()||C.appName;C.target=+$("#sTarget").value||C.target;C.staleDays=+$("#sStale").value||C.staleDays;C.managerPin=$("#sPin").value.trim()||C.managerPin;C.notify=$("#sNotify").value.trim();C.mailOnArrive=$("#sArr").checked;C.mailOnFinish=$("#sFin").checked;C.digest=$("#sDig").checked;}
+function readGeneral(){const C=S.cfg;if(!$("#sApp"))return;C.appName=$("#sApp").value.trim()||C.appName;C.target=+$("#sTarget").value||C.target;C.staleDays=+$("#sStale").value||C.staleDays;C.managerPin=$("#sPin").value.trim()||C.managerPin;C.notify=$("#sNotify").value.trim();C.mailOnArrive=$("#sArr").checked;C.mailOnFinish=$("#sFin").checked;C.digest=$("#sDig").checked;C.testMode=$("#sTest").checked;}
 function rptRange(){const p=S.rp.period;const n=new Date();n.setHours(0,0,0,0);
   if(p==="week")return weekStart(); if(p==="month")return new Date(n.getFullYear(),n.getMonth(),1).getTime(); if(p==="quarter")return n.getTime()-90*864e5; return 0;}
 function confirmLeave(b){if(b.dataset.leave==="1")return true;b.dataset.leave="1";toast("فيه تعديلات ما اتحفظتش — اضغط تاني للخروج من غير حفظ");return false;}
@@ -658,25 +752,27 @@ function bindMgr(){
   const r=$("#fRep");if(r)r.onchange=()=>{S.f.rep=r.value;render();};
   const tm=$("#fTeam");if(tm)tm.onchange=()=>{S.f.team=tm.value;S.f.rep="";render();};
   document.querySelectorAll("[data-team]").forEach(b=>b.onclick=()=>{S.f.team=S.f.team===b.dataset.team?"":b.dataset.team;S.f.rep="";render();window.scrollTo(0,0);});
-  document.querySelectorAll("[data-mtab]").forEach(b=>b.onclick=()=>{if(S.mtab==="settings"&&S.cfgDirty&&b.dataset.mtab!=="settings"&&!confirmLeave(b))return;S.mtab=b.dataset.mtab;S.edit=null;if(S.mtab==="plan")S.plan=null;render();});
+  document.querySelectorAll("[data-mtab]").forEach(b=>b.onclick=()=>{if(S.mtab==="settings"&&S.cfgDirty&&b.dataset.mtab!=="settings"&&!confirmLeave(b))return;S.mtab=b.dataset.mtab;S.edit=null;if(S.mtab==="plan")S.plan=null;if(S.mtab==="clients")S.cl=null;render();});
+  if(S.mtab==="clients"){
+    if(!S.cl&&!S.clLoading){S.clLoading=true;call("apiClients",S.mgrPin).then(r=>{S.cl=r;S.clLoading=false;render();}).catch(ex=>{S.clLoading=false;toast(ex.message);});}
+    const q=$("#clQ");if(q){q.oninput=()=>{clearTimeout(S.clT);S.clT=setTimeout(()=>{S.clq=q.value;S.clN=60;render();const n=$("#clQ");if(n){n.focus();n.setSelectionRange(n.value.length,n.value.length);}},300);};}
+    const c=$("#clC");if(c)c.onchange=()=>{S.clc=c.value;render();};const so=$("#clS");if(so)so.onchange=()=>{S.cls=so.value;render();};
+    const m=$("#clMore");if(m)m.onclick=()=>{S.clN=(S.clN||60)+60;render();};
+  }
   if(S.mtab==="plan"){
     if(!S.pw)S.pw=ymd(weekStart());
     const loadP=async(fn,...a)=>{try{S.plan=await call(fn,S.mgrPin,...a);render();return S.plan;}catch(ex){toast(ex.message);}};
     if((!S.plan||S.plan.week!==S.pw)&&!S.plLoading){S.plLoading=true;loadP("apiPlan",S.pw).finally(()=>{S.plLoading=false;});}
     document.querySelectorAll("[data-pw]").forEach(b=>b.onclick=()=>{S.pw=addDays(S.pw,+b.dataset.pw);render();});
-    const pf=$("#plF");if(pf)pf.onchange=()=>{S.pf=pf.value;render();};
-    const pk=$("#plPick");if(pk)pk.onchange=()=>{const t=$("#plClient");if(pk.value){t.value=(t.value.trim()?t.value.trim()+"\n":"")+pk.value;pk.value="";}};
-    const pr=$("#plRep");if(pr)pr.onchange=()=>{S.plRep=pr.value;};
-    const pa=$("#plAdd");if(pa)pa.onclick=async()=>{const it={week:S.pw,repId:$("#plRep").value,client:$("#plClient").value,day:$("#plDay").value,note:$("#plNote").value.trim()};
-      if(!it.repId){toast("اختار المندوب");return;}if(!it.client.trim()){toast("اكتب اسم العميل");return;}pa.disabled=true;
-      const r=await loadP("apiPlanAdd",it);pa.disabled=false;if(r)toast("اتضاف للخطة ✓");};
-    const pc=$("#plCopy");if(pc)pc.onclick=async()=>{pc.disabled=true;const r=await loadP("apiPlanCopy",addDays(S.pw,-7),S.pw);pc.disabled=false;if(r)toast(`اتنسخ ${r.copied} عميل`);};
-    document.querySelectorAll("[data-pldel]").forEach(b=>b.onclick=async()=>{if(b.dataset.a!=="1"){b.dataset.a="1";b.textContent="متأكد؟";return;}b.disabled=true;await loadP("apiPlanDel",b.dataset.pldel,S.pw);});
+    document.querySelectorAll("[data-pfs]").forEach(b=>b.onclick=()=>{S.pfs=b.dataset.pfs;render();});
+    const dec=(id,ok)=>async b=>{const n=($("#mn_"+id)||{}).value||"";if(!ok&&!n.trim()){toast("اكتب سبب الرجوع في الملاحظة");return;}b.disabled=true;const r=await loadP("apiPlanDecideMgr",id,S.pw,ok,n);if(r)toast(ok?"اتعتمدت ✓":"اترجعت للتعديل");else b.disabled=false;};
+    document.querySelectorAll("[data-mok]").forEach(b=>b.onclick=()=>dec(b.dataset.mok,true)(b));
+    document.querySelectorAll("[data-mno]").forEach(b=>b.onclick=()=>dec(b.dataset.mno,false)(b));
   }
   if(S.mtab==="settings"&&!S.cfg&&!S.cfgLoading){S.cfgLoading=true;call("apiGetSettings",S.mgrPin).then(c=>{S.cfg=c;S.cfgLoading=false;render();}).catch(ex=>{S.cfgLoading=false;toast(ex.message);});}
   if(S.mtab==="settings"&&S.cfg){
     const dirty=()=>{S.cfgDirty=true;const m=$("#cfgMsg");if(m)m.textContent="فيه تعديلات لسه ما اتحفظتش";};
-    ["sApp","sTarget","sStale","sPin","sNotify","sArr","sFin","sDig"].forEach(id=>{const el=$("#"+id);if(el)el.addEventListener("input",dirty);if(el)el.addEventListener("change",dirty);});
+    ["sApp","sTarget","sStale","sPin","sNotify","sArr","sFin","sDig","sTest"].forEach(id=>{const el=$("#"+id);if(el)el.addEventListener("input",dirty);if(el)el.addEventListener("change",dirty);});
     const cl=$("#clrV");if(cl)cl.onclick=async()=>{if(cl.dataset.a!=="1"){cl.dataset.a="1";cl.textContent="⚠️ متأكد؟ اضغط تاني للمسح";return;}
       cl.disabled=true;try{const n=await call("apiClearVisits",S.mgrPin);S.dash=await call("apiDashboard",S.mgrPin);toast(`اتمسحت ${n} زيارة`);cl.textContent="تم المسح ✓";}catch(ex){toast(ex.message);cl.disabled=false;}};
     document.querySelectorAll("[data-msel]").forEach(el=>el.onchange=()=>{const id=el.dataset.msel;if(id.startsWith("fm_"))S.cfg.fields.modes[id.slice(3)]=el.value;else S.cfg.fields.custom[+id.slice(3)].mode=el.value;dirty();});
@@ -720,6 +816,7 @@ function bindMgr(){
   const rf=$("#refresh");if(rf)rf.onclick=async()=>{rf.disabled=true;try{S.dash=await call("apiDashboard",S.mgrPin);render();toast("تم التحديث");}catch(ex){toast(ex.message);rf.disabled=false;}};
 }
 
+{const lb=document.getElementById("langBtn");if(lb){lb.textContent=LANG==="en"?"عربي":"EN";lb.onclick=()=>{try{localStorage.setItem("lang",LANG==="en"?"ar":"en");}catch(e){}location.reload();};}}
 (async()=>{
   if(false){
     $("#app").innerHTML=`<div class="card" style="max-width:520px;margin:20px auto"><h2 style="margin-bottom:8px">الملف ده مش بيشتغل لوحده</h2>
