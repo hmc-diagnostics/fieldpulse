@@ -278,6 +278,9 @@ details.more{border-radius:16px}
 .toast{bottom:110px;border-radius:14px;padding:12px 18px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 @media (min-width:761px){.toast{bottom:24px}}
 .tree-wrap{border-radius:16px}
+
+.prow{font:inherit;width:100%;background:var(--surface);border:0;border-top:1px solid var(--line);cursor:pointer;text-align:start;color:var(--ink)}
+.frows .prow:first-child{border-top:0}.prow:hover{background:var(--accent-soft)}
 </style>
 </head>
 <body>
@@ -730,10 +733,11 @@ function personForm(p,isNew){const D=S.dashRaw||S.dash;const others=D.reps.filte
     <label class="f" for="pPos">المسمى الوظيفي<input id="pPos" value="${esc(p.position||"")}"></label>
     <label class="f" for="pEmail">الإيميل<input id="pEmail" type="email" dir="ltr" value="${esc(p.email||"")}"></label>
     <label class="f" for="pArea">المنطقة<input id="pArea" value="${esc(p.area||"")}"></label>
+    <label class="f" for="pPinN">${isNew?"الرقم السري (اختياري — لو سبته فاضي هيتعمل لوحده)":"رقم سري جديد (اختياري)"}<input id="pPinN" inputmode="numeric" dir="ltr" autocomplete="off" placeholder="4–8 أرقام"></label>
    </div>
    <div class="banner b-err" id="pfErr" hidden></div>
    <div class="row"><button class="btn p" type="submit" id="pfSave" style="flex:1">${isNew?"إضافة":"حفظ التعديلات"}</button>
-    ${isNew?"":`<button class="btn g" type="button" id="pfPin">🔑 الرقم السري</button><button class="btn d" type="button" id="pfOff">${p.active===false?"تفعيل":"إيقاف"}</button>`}</div>
+    ${isNew?"":`<button class="btn g" type="button" id="pfPin">🔑 الرقم السري</button><button class="btn d" type="button" id="pfOff">${p.active===false?"تفعيل":"إيقاف"}</button><button class="btn d" type="button" id="pfDel">🗑️ حذف</button>`}</div>
    <div id="pfMsg" class="small"></div></form>`;}
 function treeHTML(sub){const R=S.dash.reps.filter(r=>!r.vacant);const cols=["#0B5868","#C9A227","#3B6EA8","#1D7F55","#7A5BA8","#B8401A"];
   const isSide=x=>/منسق|مساعد|سكرتير/.test(x.role||"");
@@ -863,12 +867,14 @@ function bindMgr(){
   const pf=$("#pf");
   if(pf){$("#pfClose").onclick=()=>{S.edit=null;render();};
     const reload=async()=>{S.dash=await call("apiDashboard",S.mgrPin);};
-    pf.onsubmit=async e=>{e.preventDefault();const er=$("#pfErr");er.hidden=true;const d={name:$("#pName").value.trim(),dept:($("#pDept")||{}).value||"",role:$("#pRole").value,manager:$("#pMgr").value,position:$("#pPos").value.trim(),email:$("#pEmail").value.trim(),area:$("#pArea").value.trim()};
+    pf.onsubmit=async e=>{e.preventDefault();const er=$("#pfErr");er.hidden=true;const pnn=($("#pPinN")||{}).value?$("#pPinN").value.trim():"";if(pnn&&!/^\d{4,8}$/.test(pnn)){er.textContent="الرقم السري لازم يكون من 4 لـ 8 أرقام";er.hidden=false;return;}const d={pin:pnn||undefined,name:$("#pName").value.trim(),dept:($("#pDept")||{}).value||"",role:$("#pRole").value,manager:$("#pMgr").value,position:$("#pPos").value.trim(),email:$("#pEmail").value.trim(),area:$("#pArea").value.trim()};
       if(!d.name){er.textContent="اكتب الاسم";er.hidden=false;return;}const sb=$("#pfSave");sb.disabled=true;
       try{if(S.edit.isNew){const r=await call("apiAddPerson",S.mgrPin,d);await reload();S.edit={isNew:false,p:S.dash.reps.find(x=>x.id===r.id)||d};render();$("#pfMsg").innerHTML=`<div class="banner b-ok">✓ اتضاف. الرقم السري بتاعه: <b dir="ltr">${esc(r.pin)}</b></div>`;}
         else{await call("apiUpdatePerson",S.mgrPin,S.edit.p.id,d);await reload();S.edit=null;render();toast("تم الحفظ ✓");}}
       catch(ex){er.textContent=ex.message;er.hidden=false;sb.disabled=false;}};
     const pp=$("#pfPin");if(pp)pp.onclick=async()=>{try{const p=await call("apiGetPin",S.mgrPin,S.edit.p.id);$("#pfMsg").innerHTML=`<div class="banner b-info">الرقم السري: <b dir="ltr">${esc(p)}</b></div>`;}catch(ex){toast(ex.message);}};
+    const pd=$("#pfDel");if(pd)pd.onclick=async()=>{if(pd.dataset.a!=="1"){pd.dataset.a="1";pd.textContent="⚠️ متأكد؟ هيتمسح نهائي";return;}pd.disabled=true;
+      try{await call("apiDeletePerson",S.mgrPin,S.edit.p.id);await reload();S.edit=null;render();toast("اتمسح ✓");}catch(ex){toast(ex.message);pd.disabled=false;}};
     const po=$("#pfOff");if(po)po.onclick=async()=>{if(po.dataset.a!=="1"){po.dataset.a="1";po.textContent="اضغط تاني للتأكيد";return;}po.disabled=true;
       try{await call("apiUpdatePerson",S.mgrPin,S.edit.p.id,{active:S.edit.p.active===false});await reload();S.edit=null;render();toast("تم ✓");}catch(ex){toast(ex.message);po.disabled=false;}};}
   const o=$("#fOut");if(o)o.onchange=()=>{S.f.outcome=o.value;render();};
