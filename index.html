@@ -220,6 +220,64 @@ details.more{background:var(--bg);border-style:solid;border-color:transparent;bo
 .langbtn{font:inherit;font-weight:700;font-size:13px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.14);color:#fff;border-radius:10px;padding:6px 11px;cursor:pointer}
 .langbtn:hover{background:rgba(255,255,255,.25)}
 html[dir="ltr"] body{font-family:"IBM Plex Sans Arabic",system-ui,"Segoe UI",sans-serif}
+
+ 
+:root{--r:18px}
+body{background:#EEF3F4}
+@media (prefers-color-scheme:dark){body{background:var(--bg)}}
+header{border-radius:0 0 26px 26px}
+.hin{padding:12px 16px 14px;flex-wrap:nowrap}
+.brand h1{font-size:20px}
+nav .nic{position:relative;display:inline-grid;place-items:center}
+nav .nic svg{width:18px;height:18px}
+nav button{display:inline-flex;align-items:center;gap:7px}
+.ndot{position:absolute;top:-2px;inset-inline-end:-4px;width:9px;height:9px;border-radius:50%;background:#E5484D;border:2px solid #fff}
+@media (max-width:760px){
+  nav#nav{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:30;display:flex;justify-content:space-around;gap:2px;padding:6px;border-radius:22px;background:rgba(255,255,255,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(11,40,48,.18),0 0 0 1px rgba(11,88,104,.06)}
+  nav#nav button{flex:1;flex-direction:column;gap:3px;padding:6px 2px 5px;font-size:11px;font-weight:600;color:#6B7C82;border-radius:16px;background:none;box-shadow:none}
+  nav#nav button .nic svg{width:22px;height:22px;padding:4px 14px;box-sizing:content-box;border-radius:14px;transition:background .15s}
+  nav#nav button[aria-current="page"]{color:#0B5868;background:none;box-shadow:none}
+  nav#nav button[aria-current="page"] .nic svg{background:linear-gradient(135deg,#0B5868,#13899A);color:#fff;box-shadow:0 4px 10px rgba(11,88,104,.3)}
+  main{padding:14px 14px 120px}
+  .langbtn{padding:5px 10px;font-size:12px}
+  @media (prefers-color-scheme:dark){nav#nav{background:rgba(21,34,39,.94)}nav#nav button{color:#93A6AD}nav#nav button[aria-current="page"]{color:#4FB3C4}}
+}
+.card{border-radius:var(--r);padding:18px;box-shadow:0 1px 1px rgba(16,40,48,.04),0 8px 24px rgba(16,40,48,.06)}
+.card h2{font-size:17px}
+.hero{border-radius:24px;padding:18px 20px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.08);inset-inline-end:-50px;top:-80px}
+.hero>*{position:relative;z-index:1}
+.big{border-radius:26px;padding:34px 18px;font-size:22px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.kpi{border-radius:20px;padding:15px 16px;background:var(--surface)}
+.kpi::after{display:none}
+.kpi .v{font-size:28px;line-height:1.1}
+.kpi .l{font-weight:600;margin-top:4px}
+.kpis .kpi:nth-child(4n+1){background:linear-gradient(160deg,#E3F2F4,#fff 70%)}
+.kpis .kpi:nth-child(4n+2){background:linear-gradient(160deg,#E6F4EC,#fff 70%)}.kpis .kpi:nth-child(4n+2) .v{color:#1D7F55}
+.kpis .kpi:nth-child(4n+3){background:linear-gradient(160deg,#FBF1DF,#fff 70%)}.kpis .kpi:nth-child(4n+3) .v{color:#9A6512}
+.kpis .kpi:nth-child(4n+4){background:linear-gradient(160deg,#EEEAF8,#fff 70%)}.kpis .kpi:nth-child(4n+4) .v{color:#5B4BA8}
+@media (prefers-color-scheme:dark){.kpis .kpi{background:var(--surface)!important}}
+.kpi.alert{box-shadow:0 0 0 2px var(--bad-soft) inset,0 8px 24px rgba(16,40,48,.06)}
+.seg.mt{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:8px;padding:2px 2px 6px;background:transparent;box-shadow:none;border-radius:0;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.seg.mt::-webkit-scrollbar{display:none}
+.seg.mt button{flex:0 0 auto;padding:10px 16px;border-radius:999px;background:var(--surface);box-shadow:0 1px 2px rgba(16,40,48,.06),0 3px 10px rgba(16,40,48,.05);font-size:14px;color:var(--ink)}
+.seg.mt button[aria-pressed="true"]{color:#fff;background:linear-gradient(135deg,#0B5868,#13899A);box-shadow:0 4px 12px rgba(11,88,104,.3)}
+.plan-i{border-inline-start:4px solid var(--accent)}.plan-i.done{border-inline-start-color:var(--good)}
+.deptbar{border-radius:16px}
+.vi{border:0;border-radius:16px;padding:13px 15px;box-shadow:0 1px 2px rgba(16,40,48,.05),0 4px 14px rgba(16,40,48,.05);border-inline-start:4px solid var(--line)}
+.vi.o-pg{border-inline-start-color:var(--good)}.vi.o-pb{border-inline-start-color:var(--bad)}.vi.o-pw{border-inline-start-color:var(--warn)}.vi.o-pn{border-inline-start-color:var(--accent)}
+.vi.card{border-inline-start:4px solid var(--accent)}
+.vi .r1 strong{font-size:15px}
+.pill{padding:3px 10px;font-size:12px}
+.chip span{border-radius:14px;padding:10px 15px;font-weight:500}
+input,select,textarea{border-radius:14px;padding:12px 14px;border-color:#D5E0E3}
+.btn{border-radius:14px}
+.btn.p{padding:13px 20px}
+details.more{border-radius:16px}
+.toast{bottom:110px;border-radius:14px;padding:12px 18px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+@media (min-width:761px){.toast{bottom:24px}}
+.tree-wrap{border-radius:16px}
 </style>
 </head>
 <body>
@@ -282,7 +340,8 @@ const opts=(a,ph)=>(ph?`<option value="">${ph}</option>`:"")+a.map(x=>`<option>$
 
 function drawNav(){
   const items=S.rep?[["home","زيارة"],["plan","خطتي"+(S.state&&S.state.teamPending?" 🔴":"")],["mine","زياراتي"],["mgr","لوحة المدير"]]:[["home","دخول المندوب"],["mgr","لوحة المدير"]];
-  $("#nav").innerHTML=items.map(([k,t])=>`<button type="button" data-v="${k}" ${S.view===k?'aria-current="page"':""}>${t}</button>`).join("");
+  const IC={home:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/>',plan:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17M8 14h3"/>',mine:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',mgr:'<path d="M5 20V11M11 20V5M17 20v-6"/><path d="M3 20h18"/>'};
+  $("#nav").innerHTML=items.map(([k,t])=>{const dot=/🔴/.test(t);t=t.replace(" 🔴","");return `<button type="button" data-v="${k}" ${S.view===k?'aria-current="page"':""}><i class="nic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>${dot?'<b class="ndot"></b>':""}</i><span>${t}</span></button>`;}).join("");
   $("#nav").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.view=b.dataset.v;if(S.view==="plan")S.mp=null;render();});
   $("#who").textContent=S.rep?S.rep.name:"HMC Diagnostics";
 }
@@ -405,7 +464,7 @@ function viewMine(){
 }
 function vItem(v,who){
   const c=v.outcome?outCls(v.outcome):(v.status==="جارية"?"pn":"pw");
-  return `<div class="vi"><div class="r1"><strong>${esc(v.client||"— بدون اسم —")}</strong><span class="pill ${c}">${esc(v.outcome||v.status)}</span></div>
+  return `<div class="vi o-${c}"><div class="r1"><strong>${esc(v.client||"— بدون اسم —")}</strong><span class="pill ${c}">${esc(v.outcome||v.status)}</span></div>
    <div class="meta num">${who?`<span><b>${esc(v.rep)}</b></span>`:""}<span>${v.ts?fmtD(v.ts)+" · "+fmtT(v.ts):""}</span>${v.duration?`<span>${v.duration} د</span>`:""}<span>${esc(v.city||"")}</span><span>${esc(v.purpose||"")}</span>
    ${v.map?`<a href="${esc(v.map)}" target="_blank" style="color:var(--good)">● اللوكيشن</a>`:`<span style="color:var(--bad)">○ بدون لوكيشن</span>`}${v.value?`<span>${fmtN(v.value)} ر.س</span>`:""}</div>
    ${v.contact||v.phone?`<div class="small">👤 ${esc(v.contact||"")}${v.phone?` · <span dir="ltr">${esc(v.phone)}</span>`:""}${v.products?` · 📦 ${esc(v.products)}`:""}</div>`:""}
