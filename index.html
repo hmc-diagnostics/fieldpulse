@@ -143,6 +143,12 @@ details.more summary::-webkit-details-marker{display:none}
 .sw span{display:none}
 .savebar{position:sticky;bottom:10px;z-index:4;display:flex;gap:10px;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
 .savebar #cfgMsg{color:var(--warn)}
+.frows{display:grid;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.frow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border-top:1px solid var(--line);font-size:14px}
+.frow:first-child{border-top:0}
+.frow.cf>span:first-child{display:grid;gap:6px;flex:1;min-width:0}
+.frow .msel{width:auto;min-width:96px;padding:6px 8px;font-size:13px}
+.frow .cfo{padding:6px 8px;font-size:13px}
 .big-add{width:100%;padding:14px;font-size:16px}
 @media (max-width:600px){
   main{padding:12px 10px 60px;gap:12px}
@@ -180,6 +186,9 @@ let LISTS={purposes:["تعريف بمنتج / جهاز جديد","متابعة �
  cities:["الرياض","جدة","مكة المكرمة","المدينة المنورة","الدمام","الخبر","الظهران","الأحساء","الجبيل","القصيم / بريدة","الطائف","أبها","خميس مشيط","تبوك","حائل","جازان","نجران","الباحة","الجوف","ينبع"],
  roles:["مدير المختبر","أخصائي مختبر","طبيب","مدير المشتريات","الإدارة","صيدلي","مهندس أجهزة طبية","أخرى"],products:[]};
 const LIST_LABELS=[["purposes","أهداف الزيارة","🎯"],["outcomes","نتائج الزيارة","✅"],["products","المنتجات","📦"],["clientTypes","أنواع الجهات","🏥"],["cities","المدن","📍"],["roles","صفات المسؤول","👤"]];
+let FIELDS={modes:{contact:"req",phone:"req",products:"req",role:"opt",clientType:"opt",city:"opt",value:"opt",next:"opt",followUp:"opt",notes:"opt"},custom:[]};
+const FIELD_DEFS=[["contact","الشخص اللي قابلته"],["phone","رقم التواصل أو الإيميل"],["products","المنتجات اللي اتكلم عنها"],["role","صفته"],["clientType","نوع الجهة"],["city","المدينة"],["value","القيمة المتوقعة (ريال)"],["next","الخطوة الجاية"],["followUp","موعد المتابعة"],["notes","ملاحظات"]];
+const FTYPES=[["text","نص"],["number","رقم"],["choice","اختيار واحد"],["multi","أكتر من اختيار"],["yesno","نعم / لا"],["date","تاريخ"]];
 const isQ=o=>/عرض سعر/.test(o||"")&&!/متابعة/.test(o||"");
 const isO=o=>/أمر شراء|اتفاق|تعاقد/.test(o||"");
 const outCls=o=>isO(o)||/^تم /.test(o||"")?"pg":/غير|لم /.test(o||"")?"pb":/مؤجل|لاحق/.test(o||"")?"pw":"pn";
@@ -254,32 +263,41 @@ function viewHome(){
      <div class="chips">${LISTS.purposes.map((t,i)=>`<label class="chip"><input type="radio" name="purp" value="${esc(t)}" id="u${i}"><span>${esc(t)}</span></label>`).join("")}</div></div>
     <div style="display:grid;gap:6px"><span class="small muted" style="font-weight:600">النتيجة <span class="req">*</span></span>
      <div class="chips">${LISTS.outcomes.map((t,i)=>`<label class="chip"><input type="radio" name="out" value="${esc(t)}" id="o${i}"><span>${esc(t)}</span></label>`).join("")}</div></div>
-    <label class="f" for="notes">ملاحظات<textarea id="notes" rows="2" placeholder="أي حاجة مهمة حصلت في الزيارة…"></textarea></label>
-    <details class="more"><summary>➕ تفاصيل إضافية <span class="muted small">(اختياري)</span></summary>
-     <div style="display:grid;gap:12px;margin-top:12px">
-     <div class="grid">
-      <label class="f" for="clientType">نوع الجهة<select id="clientType">${opts(LISTS.clientTypes,"اختر…")}</select></label>
-      <label class="f" for="city">المدينة<input id="city" list="cities" value="${esc(guessCity(o.address))}"><datalist id="cities">${LISTS.cities.map(c=>`<option value="${esc(c)}">`).join("")}</datalist></label>
-     </div>
-     <div class="grid">
-      <label class="f" for="contact">الشخص المسؤول<input id="contact"></label>
-      <label class="f" for="role">صفته<select id="role">${opts(LISTS.roles,"اختر…")}</select></label>
-      <label class="f" for="phone">رقم التواصل<input id="phone" inputmode="tel" dir="ltr"></label>
-     </div>
-     ${prods.length?`<div style="display:grid;gap:6px"><span class="small muted" style="font-weight:600">المنتجات</span>
-      <div class="chips">${prods.map((p,i)=>`<label class="chip"><input type="checkbox" name="prod" value="${esc(p)}" id="p${i}"><span>${esc(p)}</span></label>`).join("")}</div></div>`:""}
-     <div class="grid">
-      <label class="f" for="value">القيمة المتوقعة (ريال)<input id="value" type="number" min="0" step="500" inputmode="numeric"></label>
-      <label class="f" for="next">الخطوة الجاية<input id="next" placeholder="مثال: إرسال عرض سعر"></label>
-      <label class="f" for="followUp">موعد المتابعة<input id="followUp" type="date" min="${today()}"></label>
-     </div></div>
-    </details>
+    ${visitFields(o,prods,"req")}
+    ${(()=>{const h=visitFields(o,prods,"opt");return h.trim()?`<details class="more"><summary>➕ تفاصيل إضافية <span class="muted small">(اختياري)</span></summary><div style="display:grid;gap:14px;margin-top:12px">${h}</div></details>`:"";})()}
     <div class="banner b-err" id="fErr" hidden></div>
     <button class="btn p" type="submit" id="fBtn" style="padding:15px;font-size:16px">✅ إنهاء الزيارة وإرسالها</button>
     <button class="btn d sm" type="button" id="cancelV" style="justify-self:center">إلغاء الزيارة</button>
    </form></section>`;
 }
 
+function fieldLbl(t,req){return `${esc(t)}${req?' <span class="req">*</span>':""}`;}
+function chipsHtml(name,arr,multi){return `<div class="chips">${arr.map((t,i)=>`<label class="chip"><input type="${multi?"checkbox":"radio"}" name="${name}" value="${esc(t)}" id="${name}_${i}"><span>${esc(t)}</span></label>`).join("")}</div>`;}
+function chipBlock(lbl,inner){return `<div style="display:grid;gap:6px"><span class="small muted" style="font-weight:600">${lbl}</span>${inner}</div>`;}
+function visitFields(o,prods,mode){
+  const M=FIELDS.modes,out=[];const on=k=>M[k]===mode;const R=mode==="req";
+  FIELD_DEFS.forEach(([k,t])=>{if(!on(k))return;const L=fieldLbl(t,R);
+    if(k==="contact")out.push(`<label class="f" for="contact">${L}<input id="contact" autocomplete="off" placeholder="اسم الشخص"></label>`);
+    else if(k==="phone")out.push(`<label class="f" for="phone">${L}<input id="phone" dir="ltr" inputmode="email" autocomplete="off" placeholder="05xxxxxxxx أو name@mail.com"></label>`);
+    else if(k==="products"){if(prods.length)out.push(chipBlock(L,chipsHtml("prod",prods,true)));}
+    else if(k==="role")out.push(`<label class="f" for="role">${L}<select id="role">${opts(LISTS.roles,"اختر…")}</select></label>`);
+    else if(k==="clientType")out.push(`<label class="f" for="clientType">${L}<select id="clientType">${opts(LISTS.clientTypes,"اختر…")}</select></label>`);
+    else if(k==="city")out.push(`<label class="f" for="city">${L}<input id="city" list="cities" value="${esc(guessCity(o.address))}"><datalist id="cities">${LISTS.cities.map(c=>`<option value="${esc(c)}">`).join("")}</datalist></label>`);
+    else if(k==="value")out.push(`<label class="f" for="value">${L}<input id="value" type="number" min="0" step="500" inputmode="numeric"></label>`);
+    else if(k==="next")out.push(`<label class="f" for="next">${L}<input id="next" placeholder="مثال: إرسال عرض سعر"></label>`);
+    else if(k==="followUp")out.push(`<label class="f" for="followUp">${L}<input id="followUp" type="date" min="${today()}"></label>`);
+    else if(k==="notes")out.push(`<label class="f" for="notes">${L}<textarea id="notes" rows="2" placeholder="أي حاجة مهمة حصلت في الزيارة…"></textarea></label>`);
+  });
+  (FIELDS.custom||[]).forEach(c=>{if(c.mode!==mode)return;const L=fieldLbl(c.label,R),id="x_"+c.id;
+    if(c.type==="choice"||c.type==="multi")out.push(chipBlock(L,chipsHtml(id,c.options||[],c.type==="multi")));
+    else if(c.type==="yesno")out.push(chipBlock(L,chipsHtml(id,["نعم","لا"],false)));
+    else out.push(`<label class="f" for="${id}">${L}<input id="${id}" ${c.type==="number"?'type="number" inputmode="decimal"':c.type==="date"?'type="date"':""}></label>`);
+  });
+  return out.join("\n");
+}
+function readCustom(ff){const ex={};(FIELDS.custom||[]).forEach(c=>{const id="x_"+c.id;
+  if(["choice","multi","yesno"].includes(c.type)){const v=[...ff.querySelectorAll(`input[name="${id}"]:checked`)].map(x=>x.value);ex[c.id]=c.type==="multi"?v:(v[0]||"");}
+  else{const el=document.getElementById(id);ex[c.id]=el?el.value.trim():"";}});return ex;}
 function guessCity(a){a=String(a||"");return LISTS.cities.find(c=>c.split("/").some(p=>p.trim()&&a.includes(p.trim())))||"";}
 function viewMine(){
   const st=S.state;const fu=st.followUps;
@@ -294,6 +312,8 @@ function vItem(v,who){
   return `<div class="vi"><div class="r1"><strong>${esc(v.client||"— بدون اسم —")}</strong><span class="pill ${c}">${esc(v.outcome||v.status)}</span></div>
    <div class="meta num">${who?`<span><b>${esc(v.rep)}</b></span>`:""}<span>${v.ts?fmtD(v.ts)+" · "+fmtT(v.ts):""}</span>${v.duration?`<span>${v.duration} د</span>`:""}<span>${esc(v.city||"")}</span><span>${esc(v.purpose||"")}</span>
    ${v.map?`<a href="${esc(v.map)}" target="_blank" style="color:var(--good)">● اللوكيشن</a>`:`<span style="color:var(--bad)">○ بدون لوكيشن</span>`}${v.value?`<span>${fmtN(v.value)} ر.س</span>`:""}</div>
+   ${v.contact||v.phone?`<div class="small">👤 ${esc(v.contact||"")}${v.phone?` · <span dir="ltr">${esc(v.phone)}</span>`:""}${v.products?` · 📦 ${esc(v.products)}`:""}</div>`:""}
+   ${v.extra?`<div class="small muted" style="white-space:pre-line">${esc(v.extra)}</div>`:""}
    ${v.address?`<div class="small muted">${esc(v.address)}</div>`:""}</div>`;
 }
 
@@ -322,13 +342,17 @@ function bindRep(){
   };
   if($("#ff")) prefill();
   const ff=$("#ff");
-  if(ff) ff.onsubmit=async e=>{e.preventDefault();const er=$("#fErr");er.hidden=true;const val=id=>$("#"+id).value.trim();
+  if(ff) ff.onsubmit=async e=>{e.preventDefault();const er=$("#fErr");er.hidden=true;const val=id=>{const el=$("#"+id);return el?el.value.trim():"";};
     const out=(ff.querySelector('input[name="out"]:checked')||{}).value;const miss=[];
     const purp=(ff.querySelector('input[name="purp"]:checked')||{}).value;if(!val("client"))miss.push("اسم العميل");if(!purp)miss.push("هدف الزيارة");if(!out)miss.push("النتيجة");
+    const prodSel=[...ff.querySelectorAll('input[name="prod"]:checked')].map(x=>x.value);const ex=readCustom(ff);
+    FIELD_DEFS.forEach(([k,t])=>{if(FIELDS.modes[k]!=="req")return;if(k==="products"){if(ff.querySelector('input[name="prod"]')&&!prodSel.length)miss.push(t);}else if(!val(k))miss.push(t);});
+    (FIELDS.custom||[]).forEach(c=>{const v=ex[c.id];if(c.mode==="req"&&!(Array.isArray(v)?v.length:v))miss.push(c.label);});
+    const ph=val("phone");if(ph&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ph)&&ph.replace(/[^0-9]/g,"").length<7)miss.push("رقم تواصل أو إيميل صحيح");
     if(miss.length){er.textContent="ناقص: "+miss.join("، ");er.hidden=false;return;}
     const b=$("#fBtn");b.disabled=true;b.textContent="جارِ الإرسال…";
     const d={client:val("client"),clientType:val("clientType"),city:val("city"),contact:val("contact"),role:val("role"),phone:val("phone"),purpose:purp,
-      products:[...ff.querySelectorAll('input[name="prod"]:checked')].map(x=>x.value),outcome:out,value:val("value"),next:val("next"),followUp:val("followUp"),notes:val("notes")};
+      products:prodSel,outcome:out,value:val("value"),next:val("next"),followUp:val("followUp"),notes:val("notes"),extra:ex};
     try{S.state=await call("apiFinish",S.rep.id,S.pin,S.state.open.id,d);S.flash=`<div class="banner b-ok">تم إنهاء الزيارة وإرسالها ✓</div>`;window.scrollTo(0,0);render();}
     catch(ex){er.textContent=ex.message;er.hidden=false;b.disabled=false;b.textContent="✅ إنهاء الزيارة وإرسالها";}};
   const cv=$("#cancelV");
@@ -484,11 +508,27 @@ function viewSettings(){const C=S.cfg;
    <label class="sw"><input type="checkbox" id="sArr" ${C.mailOnArrive?"checked":""}><span></span> إيميل لما المندوب يوصل عند العميل</label>
    <label class="sw"><input type="checkbox" id="sFin" ${C.mailOnFinish?"checked":""}><span></span> إيميل لما المندوب ينهي الزيارة</label>
   </section>
+  <section class="card" style="display:grid;gap:10px"><div class="ch"><h2>📋 متطلبات الزيارة</h2><span class="small muted">اللي المندوب لازم يملاه</span></div>
+   <div class="small muted">اسم العميل، هدف الزيارة، والنتيجة إجباري دايمًا.</div>
+   <div class="frows">${FIELD_DEFS.map(([k,t])=>`<div class="frow"><span>${esc(t)}</span>${modeSel("fm_"+k,C.fields.modes[k],true)}</div>`).join("")}</div>
+   <h3 style="margin:8px 0 0;font-size:15px">➕ حقول إضافية خاصة بيك</h3>
+   ${(C.fields.custom||[]).length?`<div class="frows">${C.fields.custom.map((c,i)=>`<div class="frow cf"><span><b>${esc(c.label)}</b> <span class="small muted">· ${esc((FTYPES.find(x=>x[0]===c.type)||[,""])[1])}</span>
+      ${["choice","multi"].includes(c.type)?`<input class="cfo" data-cfo="${i}" value="${esc((c.options||[]).join("، "))}" placeholder="الاختيارات مفصولة بفاصلة">`:""}</span>
+      <span class="row" style="gap:6px;flex-wrap:nowrap">${modeSel("cm_"+i,c.mode,false)}<button type="button" class="btn d sm" data-cfdel="${i}" aria-label="حذف ${esc(c.label)}">×</button></span></div>`).join("")}</div>`:`<div class="small muted">مفيش حقول إضافية لسه — زوّد اللي محتاجه تحت.</div>`}
+   <div class="grid" style="align-items:end">
+    <label class="f" for="nfLabel">اسم الحقل<input id="nfLabel" placeholder="مثال: عدد الأجهزة عند العميل"></label>
+    <label class="f" for="nfType">نوعه<select id="nfType">${FTYPES.map(([v,t])=>`<option value="${v}">${t}</option>`).join("")}</select></label>
+    <label class="f" for="nfMode">إجباري؟<select id="nfMode"><option value="req">إجباري</option><option value="opt">اختياري</option></select></label>
+   </div>
+   <label class="f" for="nfOpts" id="nfOptsW" hidden>الاختيارات (افصل بفاصلة)<input id="nfOpts" placeholder="مثال: Snibe، Mindray، Roche"></label>
+   <button class="btn g" type="button" id="nfAdd" style="justify-self:start">+ إضافة الحقل</button>
+  </section>
   ${LIST_LABELS.map(([k,t,ic])=>`<section class="card"><div class="ch"><h2>${ic} ${t}</h2><span class="small muted">${(C.lists[k]||[]).length} اختيار</span></div>
     <div class="chips edit">${(C.lists[k]||[]).map((x,i)=>`<span class="echip"><button type="button" class="eup" data-up="${k}|${i}" aria-label="لأعلى" ${i?"":"disabled"}>↑</button>${esc(x)}<button type="button" class="ex" data-del="${k}|${i}" aria-label="حذف ${esc(x)}">×</button></span>`).join("")}</div>
     <div class="row" style="margin-top:10px"><input id="add_${k}" placeholder="اكتب اختيار جديد…" style="flex:1;min-width:160px"><button class="btn g" type="button" data-add="${k}">+ إضافة</button></div>
    </section>`).join("")}
   <div class="savebar"><span class="small" id="cfgMsg">${S.cfgDirty?"فيه تعديلات لسه ما اتحفظتش":""}</span><button class="btn p" type="button" id="cfgSave">💾 حفظ الإعدادات</button></div>`;}
+function modeSel(id,v,allowOff){return `<select id="${id}" class="msel" data-msel="${id}">${[["req","إجباري"],["opt","اختياري"]].concat(allowOff?[["off","مخفي"]]:[]).map(([k,t])=>`<option value="${k}" ${v===k?"selected":""}>${t}</option>`).join("")}</select>`;}
 function readGeneral(){const C=S.cfg;if(!$("#sApp"))return;C.appName=$("#sApp").value.trim()||C.appName;C.target=+$("#sTarget").value||C.target;C.staleDays=+$("#sStale").value||C.staleDays;C.managerPin=$("#sPin").value.trim()||C.managerPin;C.notify=$("#sNotify").value.trim();C.mailOnArrive=$("#sArr").checked;C.mailOnFinish=$("#sFin").checked;}
 function rptRange(){const p=S.rp.period;const n=new Date();n.setHours(0,0,0,0);
   if(p==="week")return weekStart(); if(p==="month")return new Date(n.getFullYear(),n.getMonth(),1).getTime(); if(p==="quarter")return n.getTime()-90*864e5; return 0;}
@@ -506,11 +546,18 @@ function bindMgr(){
   if(S.mtab==="settings"&&S.cfg){
     const dirty=()=>{S.cfgDirty=true;const m=$("#cfgMsg");if(m)m.textContent="فيه تعديلات لسه ما اتحفظتش";};
     ["sApp","sTarget","sStale","sPin","sNotify","sArr","sFin"].forEach(id=>{const el=$("#"+id);if(el)el.addEventListener("input",dirty);if(el)el.addEventListener("change",dirty);});
+    document.querySelectorAll("[data-msel]").forEach(el=>el.onchange=()=>{const id=el.dataset.msel;if(id.startsWith("fm_"))S.cfg.fields.modes[id.slice(3)]=el.value;else S.cfg.fields.custom[+id.slice(3)].mode=el.value;dirty();});
+    document.querySelectorAll("[data-cfo]").forEach(el=>el.oninput=()=>{S.cfg.fields.custom[+el.dataset.cfo].options=el.value.split(/[,،]/).map(x=>x.trim()).filter(Boolean);dirty();});
+    document.querySelectorAll("[data-cfdel]").forEach(b=>b.onclick=()=>{readGeneral();S.cfg.fields.custom.splice(+b.dataset.cfdel,1);S.cfgDirty=true;render();});
+    const nt=$("#nfType");if(nt)nt.onchange=()=>{$("#nfOptsW").hidden=!["choice","multi"].includes(nt.value);};
+    const na=$("#nfAdd");if(na)na.onclick=()=>{const l=$("#nfLabel").value.trim();if(!l){toast("اكتب اسم الحقل الأول");return;}const ty=nt.value;
+      const op=$("#nfOpts").value.split(/[,،]/).map(x=>x.trim()).filter(Boolean);if(["choice","multi"].includes(ty)&&op.length<2){toast("اكتب اختيارين على الأقل");return;}
+      readGeneral();S.cfg.fields.custom.push({id:"c"+Date.now().toString(36),label:l,type:ty,options:op,mode:$("#nfMode").value});S.cfgDirty=true;render();toast("اتضاف — متنساش تحفظ");};
     document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{readGeneral();const [k,i]=b.dataset.del.split("|");S.cfg.lists[k].splice(+i,1);S.cfgDirty=true;render();});
     document.querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>{readGeneral();const [k,i]=b.dataset.up.split("|");const a=S.cfg.lists[k];const j=+i;if(j>0)[a[j-1],a[j]]=[a[j],a[j-1]];S.cfgDirty=true;render();});
     document.querySelectorAll("[data-add]").forEach(b=>{const k=b.dataset.add;const inp=$("#add_"+k);const add=()=>{const v=inp.value.trim();if(!v)return;readGeneral();if(!S.cfg.lists[k].includes(v))S.cfg.lists[k].push(v);S.cfgDirty=true;render();const n=$("#add_"+k);if(n)n.focus();};b.onclick=add;inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();add();}};});
     const sv=$("#cfgSave");sv.onclick=async()=>{readGeneral();sv.disabled=true;$("#cfgMsg").textContent="جارِ الحفظ…";
-      try{const c=await call("apiSaveSettings",S.mgrPin,S.cfg);S.mgrPin=c.managerPin;store.set("mgr",c.managerPin);S.cfg=c;S.cfgDirty=false;LISTS=c.lists;S.init.appName=c.appName;$("#appName").textContent=c.appName;S.dash=await call("apiDashboard",S.mgrPin);render();toast("تم الحفظ ✓ والتطبيق اتحدّث");}
+      try{const c=await call("apiSaveSettings",S.mgrPin,S.cfg);S.mgrPin=c.managerPin;store.set("mgr",c.managerPin);S.cfg=c;S.cfgDirty=false;LISTS=c.lists;FIELDS=c.fields;S.init.appName=c.appName;$("#appName").textContent=c.appName;S.dash=await call("apiDashboard",S.mgrPin);render();toast("تم الحفظ ✓ والتطبيق اتحدّث");}
       catch(ex){$("#cfgMsg").textContent=ex.message;sv.disabled=false;}};
   }
 
@@ -546,7 +593,7 @@ function bindMgr(){
      <p class="muted" style="margin:0">لازم تفتح المنصة من رابط Apps Script اللي آخره <b dir="ltr">/exec</b> (بعد Deploy ← Web app)، مش من ملف Index.html نفسه.</p></div>`;
     return;
   }
-  try{S.init=await call("apiInit");if(S.init.lists)LISTS=S.init.lists;if(S.init.appName){$("#appName").textContent=S.init.appName;document.title=S.init.appName+" — HMC Diagnostics";}if(S.init.logo){$("#logo").src=S.init.logo;$("#logo").style.display="block";$("#mark").style.display="none";}}catch(e){$("#app").innerHTML=`<div class="banner b-err">مقدرناش نحمّل المنصة: ${esc(e.message)}</div>`;return;}
+  try{S.init=await call("apiInit");if(S.init.lists)LISTS=S.init.lists;if(S.init.fields)FIELDS=S.init.fields;if(S.init.appName){$("#appName").textContent=S.init.appName;document.title=S.init.appName+" — HMC Diagnostics";}if(S.init.logo){$("#logo").src=S.init.logo;$("#logo").style.display="block";$("#mark").style.display="none";}}catch(e){$("#app").innerHTML=`<div class="banner b-err">مقدرناش نحمّل المنصة: ${esc(e.message)}</div>`;return;}
   const saved=store.get("rep");
   if(saved){try{const st=await call("apiLogin",saved.id,saved.pin);S.rep=st.rep;S.pin=saved.pin;S.state=st;}catch(e){store.del("rep");}}
   const mp=store.get("mgr"); if(mp&&!S.rep){try{S.dash=await call("apiDashboard",mp);S.mgrPin=mp;S.view="mgr";}catch(e){store.del("mgr");}}
