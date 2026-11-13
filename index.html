@@ -209,6 +209,12 @@ details.more{background:var(--bg);border-style:solid;border-color:transparent;bo
 .savebar{border-radius:16px;border-color:transparent;box-shadow:0 8px 24px rgba(16,40,48,.15)}
 .tn{border-radius:12px;box-shadow:0 2px 8px rgba(16,40,48,.06)}
 @media (prefers-color-scheme:dark){.ring::before{background:#0d5a68}#logo{background:#fff}}
+
+.plan-i{font:inherit;text-align:start;width:100%;cursor:pointer;color:var(--ink)}.plan-i:hover{border-color:var(--accent)}
+.plan-i.done{opacity:.6;cursor:default}
+
+.deptbar{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:14px;padding:8px 12px;box-shadow:0 1px 2px rgba(16,40,48,.05),0 4px 14px rgba(16,40,48,.05)}
+.deptbar select{width:auto;flex:1;max-width:280px;font-weight:600}
 </style>
 </head>
 <body>
@@ -225,8 +231,8 @@ let LISTS={purposes:["تعريف بمنتج / جهاز جديد","متابعة �
  outcomes:["تم الاتفاق / أمر شراء","طلب عرض سعر","مهتم — يحتاج متابعة","تم حل المشكلة","تم التحصيل","مؤجل","غير مهتم","لم يتم اللقاء"],
  clientTypes:["مستشفى حكومي","مستشفى خاص","مختبر خاص","مجمع طبي / مستوصف","عيادة","بنك دم","موزع / شريك","أخرى"],
  cities:["الرياض","جدة","مكة المكرمة","المدينة المنورة","الدمام","الخبر","الظهران","الأحساء","الجبيل","القصيم / بريدة","الطائف","أبها","خميس مشيط","تبوك","حائل","جازان","نجران","الباحة","الجوف","ينبع"],
- roles:["مدير المختبر","أخصائي مختبر","طبيب","مدير المشتريات","الإدارة","صيدلي","مهندس أجهزة طبية","أخرى"],products:[]};
-const LIST_LABELS=[["purposes","أهداف الزيارة","🎯"],["outcomes","نتائج الزيارة","✅"],["products","المنتجات","📦"],["clientTypes","أنواع الجهات","🏥"],["cities","المدن","📍"],["roles","صفات المسؤول","👤"]];
+ roles:["مدير المختبر","أخصائي مختبر","طبيب","مدير المشتريات","الإدارة","صيدلي","مهندس أجهزة طبية","أخرى"],products:[],depts:["HMC Diagnostics","PPS"]};
+const LIST_LABELS=[["depts","الأقسام","🏢"],["purposes","أهداف الزيارة","🎯"],["outcomes","نتائج الزيارة","✅"],["products","المنتجات","📦"],["clientTypes","أنواع الجهات","🏥"],["cities","المدن","📍"],["roles","صفات المسؤول","👤"]];
 let FIELDS={modes:{contact:"req",phone:"req",products:"req",role:"req",clientType:"opt",city:"opt",value:"opt",next:"opt",followUp:"opt",notes:"opt"},custom:[]};
 const FIELD_DEFS=[["contact","الشخص اللي قابلته"],["phone","رقم التواصل أو الإيميل"],["products","المنتجات اللي اتكلم عنها"],["role","صفة المسؤول"],["clientType","نوع الجهة"],["city","المدينة"],["value","القيمة المتوقعة (ريال)"],["next","الخطوة الجاية"],["followUp","موعد المتابعة"],["notes","ملاحظات"]];
 const FTYPES=[["text","نص"],["number","رقم"],["choice","اختيار واحد"],["multi","أكتر من اختيار"],["yesno","نعم / لا"],["date","تاريخ"]];
@@ -234,7 +240,7 @@ const isQ=o=>/عرض سعر/.test(o||"")&&!/متابعة/.test(o||"");
 const isO=o=>/أمر شراء|اتفاق|تعاقد/.test(o||"");
 const outCls=o=>isO(o)||/^تم /.test(o||"")?"pg":/غير|لم /.test(o||"")?"pb":/مؤجل|لاحق/.test(o||"")?"pw":"pn";
 
-const S={init:null,rep:null,pin:null,state:null,view:"home",mgrPin:null,dash:null,f:{period:"week",rep:"",outcome:"",team:""},rpt:null,mtab:"visits",edit:null,rp:{person:"",withTeam:true,period:"month"}};
+const S={dept:(()=>{try{return JSON.parse(localStorage.getItem("mdept"))||"";}catch(e){return "";}})(),init:null,rep:null,pin:null,state:null,view:"home",mgrPin:null,dash:null,f:{period:"week",rep:"",outcome:"",team:""},rpt:null,mtab:"visits",edit:null,rp:{person:"",withTeam:true,period:"month"}};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmtD=ts=>new Date(ts).toLocaleDateString("ar-EG-u-nu-latn",{weekday:"short",day:"numeric",month:"short"});
@@ -253,17 +259,22 @@ function drawNav(){
   $("#who").textContent=S.rep?S.rep.name:"HMC Diagnostics";
 }
 function render(){drawNav();const a=$("#app");
+  if(S.dash&&!S.dash._f){S.dashRaw=S.dash;S.dash=deptFilter(S.dash);}
   if(S.view==="mgr"){a.innerHTML=S.dash?viewDash():viewMgrLogin();bindMgr();return;}
   if(!S.rep){a.innerHTML=viewLogin();bindLogin();return;}
   a.innerHTML=S.view==="mine"?viewMine():viewHome();bindRep();
 }
 
 function viewLogin(){
-  const reps=(S.init&&S.init.reps)||[];
+  const all=(S.init&&S.init.reps)||[];const d0=(LISTS.depts||[])[0]||"";const dOf=r=>r.dept||d0;
+  const depts=[...new Set([...(LISTS.depts||[]),...all.map(dOf)])].filter(d=>all.some(r=>dOf(r)===d));
+  if(!S.ld||!depts.includes(S.ld))S.ld=depts.includes(store.get("dept"))?store.get("dept"):(depts.length===1?depts[0]:"");
+  const reps=all.filter(r=>!S.ld||dOf(r)===S.ld);
   return `<section class="card" style="max-width:460px;margin:20px auto;width:100%">
    <div class="lhead"><span>📍</span><div><h2>أهلاً بيك في ${esc((S.init&&S.init.appName)||"نبض الميدان")}</h2></div></div><p class="muted small" style="margin:0 0 14px">اختار اسمك واكتب الرقم السري بتاعك. هتدخل مرة واحدة بس على الموبايل ده.</p>
    <form id="lf" style="display:grid;gap:12px">
-    <label class="f" for="lRep">الاسم<select id="lRep" required><option value="">اختار اسمك…</option>${reps.map(r=>`<option value="${esc(r.id)}">${esc(r.name)}</option>`).join("")}</select></label>
+    ${depts.length>1?`<div style="display:grid;gap:6px"><span class="small muted" style="font-weight:600">القسم</span><div class="chips">${depts.map(d=>`<label class="chip"><input type="radio" name="ldept" value="${esc(d)}" ${S.ld===d?"checked":""}><span>🏢 ${esc(d)}</span></label>`).join("")}</div></div>`:""}
+    <label class="f" for="lRep">الاسم<select id="lRep" required ${depts.length>1&&!S.ld?"disabled":""}><option value="">${depts.length>1&&!S.ld?"اختار القسم الأول…":"اختار اسمك…"}</option>${reps.map(r=>`<option value="${esc(r.id)}">${esc(r.name)}</option>`).join("")}</select></label>
     <label class="f" for="lPin">الرقم السري<input id="lPin" inputmode="numeric" autocomplete="off" required dir="ltr"></label>
     <button type="button" class="link" id="lForgot">نسيت الرقم السري؟</button>
     <div class="banner b-err" id="lErr" hidden></div>
@@ -271,6 +282,7 @@ function viewLogin(){
    </form></section>`;
 }
 function bindLogin(){
+  document.querySelectorAll('input[name="ldept"]').forEach(x=>x.onchange=()=>{S.ld=x.value;store.set("dept",x.value);render();});
   $("#lf").onsubmit=async e=>{e.preventDefault();const id=$("#lRep").value,pin=$("#lPin").value.trim();const er=$("#lErr");er.hidden=true;
     if(!id||!pin){er.textContent="اختار اسمك واكتب الرقم السري";er.hidden=false;return;}
     const b=$("#lBtn");b.disabled=true;b.textContent="جارِ الدخول…";
@@ -297,7 +309,7 @@ function viewHome(){
       <label class="f" for="cName">اسم العميل (اختياري — تقدر تكتبه بعدين)<input id="cName" list="cl" placeholder="مثال: مستشفى الحبيب – العليا"><datalist id="cl">${clients.map(c=>`<option value="${esc(c)}">`).join("")}</datalist></label>
       <button class="big" id="arrive" type="button">📍 وصلت عند العميل<small>هيتبعت موقعك تلقائي للإدارة</small></button>
       <div id="gpsMsg" class="small muted" style="text-align:center"></div>
-    </section>${head}`;
+    </section>${planCard(st.plan)}${head}`;
   }
   const prods=st.products||[];const cInfo=(st.clients||{})[o.client]||{};
   return `<section class="card live">
@@ -346,6 +358,14 @@ function visitFields(o,prods,mode){
 function readCustom(ff){const ex={};(FIELDS.custom||[]).forEach(c=>{const id="x_"+c.id;
   if(["choice","multi","yesno"].includes(c.type)){const v=[...ff.querySelectorAll(`input[name="${id}"]:checked`)].map(x=>x.value);ex[c.id]=c.type==="multi"?v:(v[0]||"");}
   else{const el=document.getElementById(id);ex[c.id]=el?el.value.trim():"";}});return ex;}
+function planCard(pl){if(!pl||!pl.length)return "";const d=pl.filter(p=>p.done).length;const td=ymd(Date.now());
+  const srt=[...pl].sort((a,b)=>(a.done-b.done)||((a.day||"9")<(b.day||"9")?-1:1));
+  return `<section class="card"><div class="ch"><h2>📅 خطة الأسبوع</h2><span class="pill ${d===pl.length?"pg":"pn"} num">${d}/${pl.length}</span></div>
+   <div class="bar ${d===pl.length?"ok":""}" style="margin-bottom:10px"><i style="width:${Math.round(d/pl.length*100)}%"></i></div>
+   <div class="vlist">${srt.map(p=>`<button type="button" class="vi plan-i ${p.done?"done":""}" data-plc="${esc(p.client)}" ${p.done?"disabled":""}>
+     <div class="r1"><strong>${p.done?"✅ ":""}${esc(p.client)}</strong>${p.done?`<span class="pill pg">اتزار</span>`:p.day&&p.day<td?`<span class="pill pw">متأخر</span>`:p.day===td?`<span class="pill pn">النهارده</span>`:p.day?`<span class="small muted">${DAYS[new Date(p.day+"T00:00:00").getDay()]}</span>`:""}</div>
+     ${p.note?`<div class="small muted">📝 ${esc(p.note)}</div>`:""}</button>`).join("")}</div>
+   <div class="small muted" style="margin-top:8px">دوس على العميل وهو هيتكتب فوق، وبعدين دوس "وصلت" لما توصل.</div></section>`;}
 function guessCity(a){a=String(a||"");return LISTS.cities.find(c=>c.split("/").some(p=>p.trim()&&a.includes(p.trim())))||"";}
 function viewMine(){
   const st=S.state;const fu=st.followUps;
@@ -390,6 +410,7 @@ function bindRep(){
     }
   };
   if($("#ff")) prefill();
+  document.querySelectorAll("[data-plc]").forEach(b=>b.onclick=()=>{const c=$("#cName");if(c){c.value=b.dataset.plc;window.scrollTo({top:0,behavior:"smooth"});c.focus();toast("اتكتب اسم العميل — دوس وصلت لما توصل");}});
   const ff=$("#ff");
   if(ff) ff.onsubmit=async e=>{e.preventDefault();const er=$("#fErr");er.hidden=true;const val=id=>{const el=$("#"+id);return el?el.value.trim():"";};
     const out=(ff.querySelector('input[name="out"]:checked')||{}).value;const miss=[];
@@ -446,8 +467,48 @@ function orgChart(vs){
     ${r.vacant?`<span class="org-node vac">شاغر <small>${esc(r.role&&r.role!=="شاغر"?r.role:"مكان متاح")}</small></span>`:
     `<button type="button" class="org-node ${S.f.team===r.id?"sel":""}" data-team="${esc(r.id)}"><b>${esc(r.name)}</b> <small>${esc(r.role||r.position||"")}</small> <span class="pill pn num">${sub(r.id)}</span></button>`}</div>`).join("");
 }
-function mtabs(){const t=S.mtab;return `<div class="seg mt" role="tablist">${[["visits","📊 الزيارات"],["team","👥 الفريق"],["reports","📄 التقارير"],["settings","⚙️ الإعدادات"]].map(([k,x])=>`<button type="button" data-mtab="${k}" aria-pressed="${t===k}">${x}</button>`).join("")}</div>`;}
-function viewDash(){return mtabs()+(S.mtab==="team"?viewTeam():S.mtab==="reports"?viewReports():S.mtab==="settings"?viewSettings():viewVisits());}
+function mtabs(){const t=S.mtab;return `<div class="seg mt" role="tablist">${[["visits","📊 الزيارات"],["plan","📅 الخطة"],["team","👥 الفريق"],["reports","📄 التقارير"],["settings","⚙️ الإعدادات"]].map(([k,x])=>`<button type="button" data-mtab="${k}" aria-pressed="${t===k}">${x}</button>`).join("")}</div>`;}
+function deptBar(){const D=S.dashRaw;if(!D)return "";const d0=(LISTS.depts||[])[0]||"";const ds=[...new Set([...(LISTS.depts||[]),...D.reps.map(r=>r.dept||d0)])];
+  if(ds.length<2)return "";return `<div class="deptbar"><span>🏢</span><select id="dSel" aria-label="القسم"><option value="">كل الأقسام</option>${ds.map(d=>`<option ${S.dept===d?"selected":""}>${esc(d)}</option>`).join("")}</select><span class="small muted">${D.reps.filter(r=>!S.dept||(r.dept||d0)===S.dept).length} شخص</span></div>`;}
+function deptFilter(D){const d0=(LISTS.depts||[])[0]||"";if(!S.dept)return Object.assign({},D,{_f:1});
+  const reps=D.reps.filter(r=>(r.dept||d0)===S.dept);const ids=new Set(reps.map(r=>r.id));
+  return Object.assign({},D,{_f:1,reps,visits:D.visits.filter(v=>ids.has(v.repId))});}
+function viewDash(){return deptBar()+mtabs()+(S.mtab==="plan"?viewPlan():S.mtab==="team"?viewTeam():S.mtab==="reports"?viewReports():S.mtab==="settings"?viewSettings():viewVisits());}
+function ymd(t){const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function addDays(w,n){const d=new Date(w+"T00:00:00");d.setDate(d.getDate()+n);return ymd(d);}
+const DAYS=["الأحد","الاتنين","التلات","الأربع","الخميس","الجمعة","السبت"];
+function wkLabel(w){const e=addDays(w,6);const f=x=>{const d=new Date(x+"T00:00:00");return d.getDate()+"/"+(d.getMonth()+1);};return `${f(w)} – ${f(e)}`;}
+function viewPlan(){
+  const P=S.plan;if(!P||P.week!==S.pw)return `<div class="card loading">جارِ تحميل الخطة…</div>`;
+  const reps=S.dash.reps.filter(r=>r.active!==false&&!/منسق|مساعد|سكرتير/.test((r.role||"")+" "+(r.position||"")));
+  const ids=new Set(S.dash.reps.map(r=>r.id));const PI=P.items.filter(i=>ids.has(i.repId));const fr=S.pf||"";const items=PI.filter(i=>!fr||i.repId===fr);
+  const past=S.pw<P.current,cur=S.pw===P.current;
+  const by={};PI.forEach(i=>{const o=by[i.repId]=by[i.repId]||{n:0,d:0};o.n++;if(i.done)o.d++;});
+  const tot=PI.length,done=PI.filter(i=>i.done).length,pc=tot?Math.round(done/tot*100):0;
+  const names=[...new Set([...(S.dash.clients||[]).map(c=>c.name),...S.dash.visits.map(v=>v.client).filter(Boolean)])];
+  const st=i=>i.done?`<span class="pill pg">✅ اتزار ${fmtD(i.doneAt)}</span>`:past?`<span class="pill pb">❌ ما اتزارش</span>`:(i.day&&i.day<ymd(Date.now()))?`<span class="pill pw">⏰ متأخر</span>`:`<span class="pill pn">⏳ لسه</span>`;
+  return `<section class="card"><div class="ch"><h2>📅 خطة الأسبوع</h2>
+     <div class="seg"><button type="button" data-pw="-7" aria-label="الأسبوع اللي فات">→</button><button type="button" aria-pressed="true" style="min-width:150px">${cur?"الأسبوع ده · ":""}${wkLabel(S.pw)}</button><button type="button" data-pw="7" aria-label="الأسبوع الجاي">←</button></div></div>
+    <div class="kpis"><div class="kpi"><div class="v num">${tot}</div><div class="l">زيارة مخططة</div></div><div class="kpi"><div class="v num">${done}</div><div class="l">اتنفذت</div></div>
+     <div class="kpi"><div class="v num">${pc}%</div><div class="l">نسبة التنفيذ</div><div class="bar ${pc>=80?"ok":pc<50?"low":""}" style="margin-top:7px"><i style="width:${pc}%"></i></div></div></div>
+   </section>
+   <section class="card" style="display:grid;gap:12px"><h2>➕ ضيف للخطة</h2>
+    <div class="grid">
+     <label class="f" for="plRep">المندوب<select id="plRep"><option value="">اختار…</option>${reps.map(r=>`<option value="${esc(r.id)}" ${S.plRep===r.id?"selected":""}>${esc(r.name)}</option>`).join("")}</select></label>
+     <label class="f" for="plDay">اليوم (اختياري)<select id="plDay"><option value="">أي يوم في الأسبوع</option>${[0,1,2,3,4].map(n=>`<option value="${addDays(S.pw,n)}">${DAYS[n]} ${addDays(S.pw,n).slice(5).split("-").reverse().join("/")}</option>`).join("")}</select></label>
+    </div>
+    <label class="f" for="plClient">العملاء <span class="small muted">(كل عميل في سطر — تقدر تكتب أكتر من واحد)</span><textarea id="plClient" rows="3" list="plCl" placeholder="مستشفى الحبيب – العليا&#10;مختبر البرج – الملز"></textarea></label>
+    <label class="f" for="plPick">أو اختار من العملاء المعروفين<input id="plPick" list="plCl" placeholder="اكتب أول حروف…"><datalist id="plCl">${names.map(n=>`<option value="${esc(n)}">`).join("")}</datalist></label>
+    <label class="f" for="plNote">ملاحظة للمندوب (اختياري)<input id="plNote" placeholder="مثال: متابعة عرض سعر Snibe"></label>
+    <div class="row"><button class="btn p" type="button" id="plAdd">+ إضافة للخطة</button>${!past?`<button class="btn g" type="button" id="plCopy">📋 انسخ خطة الأسبوع اللي فات</button>`:""}</div>
+   </section>
+   <section class="card"><div class="ch"><h2>📋 الخطة</h2>
+     <label class="f" for="plF" style="min-width:170px"><select id="plF"><option value="">كل المناديب</option>${reps.map(r=>`<option value="${esc(r.id)}" ${fr===r.id?"selected":""}>${esc(r.name)}${by[r.id]?` (${by[r.id].d}/${by[r.id].n})`:""}</option>`).join("")}</select></label></div>
+    ${items.length?`<div class="vlist">${items.sort((a,b)=>(a.rep+a.day).localeCompare(b.rep+b.day)).map(i=>`<div class="vi"><div class="r1"><strong>${esc(i.client)}</strong>${st(i)}</div>
+      <div class="meta"><span><b>${esc(i.rep)}</b></span>${i.day?`<span>📆 ${DAYS[new Date(i.day+"T00:00:00").getDay()]} ${i.day.slice(5).split("-").reverse().join("/")}</span>`:""}${i.outcome?`<span>${esc(i.outcome)}</span>`:""}${i.note?`<span>📝 ${esc(i.note)}</span>`:""}
+      <button type="button" class="btn d sm" data-pldel="${esc(i.id)}" style="margin-inline-start:auto">حذف</button></div></div>`).join("")}</div>`:`<div class="empty">مفيش خطة للأسبوع ده لسه — ضيف من فوق 👆</div>`}
+   </section>`;
+}
 function viewVisits(){
   const D=S.dash,f=S.f,from=range();
   const scope=subtree(f.team);
@@ -506,11 +567,12 @@ function viewVisits(){
     </div></div>`;
 }
 const ROLESX=["مدير القسم","منسق القسم","مدير المبيعات","مشرف","مندوب","أخصائي تطبيقات","مهندس صيانة","أخرى"];
-function personForm(p,isNew){const D=S.dash;const others=D.reps.filter(r=>r.id!==(p.id||"")&&r.active);
+function personForm(p,isNew){const D=S.dashRaw||S.dash;const others=D.reps.filter(r=>r.id!==(p.id||"")&&r.active);
   return `<form id="pf" class="card pform" style="display:grid;gap:12px">
    <div class="ch" style="margin:0"><h2>${isNew?"➕ إضافة شخص جديد":"تعديل "+esc(p.name)}</h2><button class="btn g sm" type="button" id="pfClose">إغلاق</button></div>
    <div class="grid">
     <label class="f" for="pName">الاسم <span class="req">*</span><input id="pName" value="${esc(p.name||"")}" required></label>
+    <label class="f" for="pDept">القسم<select id="pDept">${(LISTS.depts||[]).map(d=>`<option ${d===(p.dept||S.dept||(LISTS.depts||[])[0])?"selected":""}>${esc(d)}</option>`).join("")}</select></label>
     <label class="f" for="pRole">الدور<select id="pRole">${ROLESX.map(r=>`<option ${r===(p.role||"مندوب")?"selected":""}>${r}</option>`).join("")}</select></label>
     <label class="f" for="pMgr">تابع لـ<select id="pMgr"><option value="">— بدون —</option>${others.map(r=>`<option value="${esc(r.id)}" ${r.id===(p.manager||"")?"selected":""}>${esc(r.name)}</option>`).join("")}</select></label>
     <label class="f" for="pPos">المسمى الوظيفي<input id="pPos" value="${esc(p.position||"")}"></label>
@@ -589,13 +651,28 @@ function confirmLeave(b){if(b.dataset.leave==="1")return true;b.dataset.leave="1
 function bindMgr(){
   const mf=$("#mf");
   forgotBtn("#mForgot","#mErr",()=>call("apiForgotMgr"));
+  const ds=$("#dSel");if(ds)ds.onchange=()=>{S.dept=ds.value;store.set("mdept",ds.value);S.dash=S.dashRaw;S.plan&&(S.plan=S.plan);render();};
   if(mf) mf.onsubmit=async e=>{e.preventDefault();const pin=$("#mPin").value.trim();const er=$("#mErr");er.hidden=true;const b=$("#mBtn");b.disabled=true;
     try{S.dash=await call("apiDashboard",pin);S.mgrPin=pin;store.set("mgr",pin);render();}catch(ex){er.textContent=ex.message;er.hidden=false;b.disabled=false;}};
   document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{S.f.period=b.dataset.p;render();});
   const r=$("#fRep");if(r)r.onchange=()=>{S.f.rep=r.value;render();};
   const tm=$("#fTeam");if(tm)tm.onchange=()=>{S.f.team=tm.value;S.f.rep="";render();};
   document.querySelectorAll("[data-team]").forEach(b=>b.onclick=()=>{S.f.team=S.f.team===b.dataset.team?"":b.dataset.team;S.f.rep="";render();window.scrollTo(0,0);});
-  document.querySelectorAll("[data-mtab]").forEach(b=>b.onclick=()=>{if(S.mtab==="settings"&&S.cfgDirty&&b.dataset.mtab!=="settings"&&!confirmLeave(b))return;S.mtab=b.dataset.mtab;S.edit=null;render();});
+  document.querySelectorAll("[data-mtab]").forEach(b=>b.onclick=()=>{if(S.mtab==="settings"&&S.cfgDirty&&b.dataset.mtab!=="settings"&&!confirmLeave(b))return;S.mtab=b.dataset.mtab;S.edit=null;if(S.mtab==="plan")S.plan=null;render();});
+  if(S.mtab==="plan"){
+    if(!S.pw)S.pw=ymd(weekStart());
+    const loadP=async(fn,...a)=>{try{S.plan=await call(fn,S.mgrPin,...a);render();return S.plan;}catch(ex){toast(ex.message);}};
+    if((!S.plan||S.plan.week!==S.pw)&&!S.plLoading){S.plLoading=true;loadP("apiPlan",S.pw).finally(()=>{S.plLoading=false;});}
+    document.querySelectorAll("[data-pw]").forEach(b=>b.onclick=()=>{S.pw=addDays(S.pw,+b.dataset.pw);render();});
+    const pf=$("#plF");if(pf)pf.onchange=()=>{S.pf=pf.value;render();};
+    const pk=$("#plPick");if(pk)pk.onchange=()=>{const t=$("#plClient");if(pk.value){t.value=(t.value.trim()?t.value.trim()+"\n":"")+pk.value;pk.value="";}};
+    const pr=$("#plRep");if(pr)pr.onchange=()=>{S.plRep=pr.value;};
+    const pa=$("#plAdd");if(pa)pa.onclick=async()=>{const it={week:S.pw,repId:$("#plRep").value,client:$("#plClient").value,day:$("#plDay").value,note:$("#plNote").value.trim()};
+      if(!it.repId){toast("اختار المندوب");return;}if(!it.client.trim()){toast("اكتب اسم العميل");return;}pa.disabled=true;
+      const r=await loadP("apiPlanAdd",it);pa.disabled=false;if(r)toast("اتضاف للخطة ✓");};
+    const pc=$("#plCopy");if(pc)pc.onclick=async()=>{pc.disabled=true;const r=await loadP("apiPlanCopy",addDays(S.pw,-7),S.pw);pc.disabled=false;if(r)toast(`اتنسخ ${r.copied} عميل`);};
+    document.querySelectorAll("[data-pldel]").forEach(b=>b.onclick=async()=>{if(b.dataset.a!=="1"){b.dataset.a="1";b.textContent="متأكد؟";return;}b.disabled=true;await loadP("apiPlanDel",b.dataset.pldel,S.pw);});
+  }
   if(S.mtab==="settings"&&!S.cfg&&!S.cfgLoading){S.cfgLoading=true;call("apiGetSettings",S.mgrPin).then(c=>{S.cfg=c;S.cfgLoading=false;render();}).catch(ex=>{S.cfgLoading=false;toast(ex.message);});}
   if(S.mtab==="settings"&&S.cfg){
     const dirty=()=>{S.cfgDirty=true;const m=$("#cfgMsg");if(m)m.textContent="فيه تعديلات لسه ما اتحفظتش";};
@@ -631,7 +708,7 @@ function bindMgr(){
   const pf=$("#pf");
   if(pf){$("#pfClose").onclick=()=>{S.edit=null;render();};
     const reload=async()=>{S.dash=await call("apiDashboard",S.mgrPin);};
-    pf.onsubmit=async e=>{e.preventDefault();const er=$("#pfErr");er.hidden=true;const d={name:$("#pName").value.trim(),role:$("#pRole").value,manager:$("#pMgr").value,position:$("#pPos").value.trim(),email:$("#pEmail").value.trim(),area:$("#pArea").value.trim()};
+    pf.onsubmit=async e=>{e.preventDefault();const er=$("#pfErr");er.hidden=true;const d={name:$("#pName").value.trim(),dept:($("#pDept")||{}).value||"",role:$("#pRole").value,manager:$("#pMgr").value,position:$("#pPos").value.trim(),email:$("#pEmail").value.trim(),area:$("#pArea").value.trim()};
       if(!d.name){er.textContent="اكتب الاسم";er.hidden=false;return;}const sb=$("#pfSave");sb.disabled=true;
       try{if(S.edit.isNew){const r=await call("apiAddPerson",S.mgrPin,d);await reload();S.edit={isNew:false,p:S.dash.reps.find(x=>x.id===r.id)||d};render();$("#pfMsg").innerHTML=`<div class="banner b-ok">✓ اتضاف. الرقم السري بتاعه: <b dir="ltr">${esc(r.pin)}</b></div>`;}
         else{await call("apiUpdatePerson",S.mgrPin,S.edit.p.id,d);await reload();S.edit=null;render();toast("تم الحفظ ✓");}}
