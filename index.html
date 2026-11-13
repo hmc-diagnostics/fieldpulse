@@ -555,7 +555,7 @@ function viewClients(){
   const L=S.cl;if(!L)return `<div class="card loading">جارِ تحميل العملاء…</div>`;
   const q=(S.clq||"").trim().toLowerCase(),city=S.clc||"",srt=S.cls||"sales";
   const cities=[...new Set(L.map(c=>c.city).filter(Boolean))].sort();
-  let rows=L.filter(c=>(!city||c.city===city)&&(!q||[c.name,c.brands,c.lines,c.salesman,c.contact,c.code].join(" ").toLowerCase().includes(q)));
+  let rows=L.filter(c=>(!city||c.city===city)&&(!q||[c.name,c.brands,c.lines,c.contact,c.code].join(" ").toLowerCase().includes(q)));
   rows.sort(srt==="name"?(a,b)=>a.name.localeCompare(b.name,"ar"):srt==="visits"?(a,b)=>b.visits-a.visits:srt==="nov"?(a,b)=>(a.lastTs||0)-(b.lastTs||0):(a,b)=>(b.s26+b.s25)-(a.s26+a.s25));
   const tel=p=>p?`<a href="tel:${esc(p)}" dir="ltr">${esc(p)}</a>`:"";
   return `<section class="card" style="display:grid;gap:10px"><div class="ch"><h2>🏥 دليل العملاء</h2><span class="pill pn num">${rows.length} / ${L.length}</span></div>
@@ -569,7 +569,7 @@ function viewClients(){
      <div class="meta">${c.city?`<span>📍 ${esc(c.city)}</span>`:""}${c.code?`<span>#${esc(c.code)}</span>`:""}${c.lastBuy?`<span>🧾 آخر شراء ${esc(c.lastBuy)}</span>`:""}${c.s26||c.s25?`<span class="num">💰 2026: ${fmtN(c.s26)} · 2025: ${fmtN(c.s25)}</span>`:""}</div>
      ${c.lines?`<div class="small muted">📦 ${esc(c.lines)}</div>`:""}
      <div class="meta">${c.contact||c.phone?`<span>👤 ${esc(c.contact||"")}${c.role?` (${esc(c.role)})`:""} ${tel(c.phone)}</span>`:`<span class="muted">👤 لسه مفيش رقم تواصل — هيتسجل من أول زيارة</span>`}</div>
-     <div class="meta">${c.salesman?`<span>🧑‍💼 مسؤول المبيعات: ${esc(c.salesman)} ${tel(c.salesPhone)}</span>`:""}<span>🚗 ${c.visits?`${c.visits} زيارة · آخرها ${fmtD(c.lastTs)} (${esc(c.lastRep)})`:"لسه ما اتزارش"}</span></div>
+     <div class="meta"><span>🚗 ${c.visits?`${c.visits} زيارة · آخرها ${fmtD(c.lastTs)} (${esc(c.lastRep)})`:"لسه ما اتزارش"}</span></div>
     </div>`).join("")}</div>
    ${rows.length>(S.clN||60)?`<button class="btn g" type="button" id="clMore" style="justify-self:center">عرض المزيد</button>`:""}`;
 }
